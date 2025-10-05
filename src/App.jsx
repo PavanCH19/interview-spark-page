@@ -30,7 +30,7 @@ function App() {
         <Route path="/setup-results" element={<CareerRecommendationDashboard />} />
 
         {/* Resume Builder - Placeholder for future implementation */}
-        {/* <Route path="/build-resume" element={<ResumeBuilderDashboard />} /> */}
+        <Route path="/build-resume" element={<ResumeBuilderDashboard />} />
 
         <Route path="/interview" element={<InterviewSessionUI />} />
 

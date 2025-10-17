@@ -6,6 +6,7 @@ import { TabButtons } from '../components/TabButtons';
 import { LoginForm } from '../components/LoginForm';
 import { RegisterForm } from '../components/RegisterForm';
 import { AuthFooter } from '../components/AuthFooter';
+import { Notification } from '../components/Notifications';
 
 export default function AuthPage() {
     const [activeTab, setActiveTab] = useState('login');
@@ -13,6 +14,7 @@ export default function AuthPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [notification, setNotification] = useState({ message: '', type: '' }); // lowercase 'n'
 
     const [loginForm, setLoginForm] = useState({ email: '', password: '' });
     const [registerForm, setRegisterForm] = useState({
@@ -95,7 +97,7 @@ export default function AuthPage() {
             setIsLoading(true);
             setTimeout(() => {
                 setIsLoading(false);
-                setShowSuccess(true);
+                setNotification({ message: 'User Login successful!', type: 'success' });
                 setTimeout(() => console.log('Login successful:', loginForm), 1500);
             }, 1500);
         }
@@ -146,6 +148,15 @@ export default function AuthPage() {
         .input-focus { transition: all 0.3s ease; }
         .input-focus:focus { transform: translateY(-2px); }
       `}</style>
+
+            {notification.message && (
+                <Notification
+                    message={notification.message}
+                    type={notification.type}
+                    duration={4000}
+                    onClose={() => setNotification({ message: '', type: '' })}
+                />
+            )}
 
             {showSuccess && <SuccessModal />}
 

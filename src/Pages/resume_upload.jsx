@@ -357,5 +357,3 @@ const ResumeUpload = ({ onComplete }) => {
 };
 
 export default ResumeUpload;
-
-

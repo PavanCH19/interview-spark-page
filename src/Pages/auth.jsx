@@ -1,24 +1,26 @@
 // AuthPage.jsx (Main Component)
 import { useState } from 'react';
-import { SuccessModal } from '../components/SuccessModal';
 import { LeftSection } from '../components/LeftSection';
 import { TabButtons } from '../components/TabButtons';
 import { LoginForm } from '../components/LoginForm';
 import { RegisterForm } from '../components/RegisterForm';
 import { AuthFooter } from '../components/AuthFooter';
 import { Notification } from '../components/Notifications';
+import { useNavigate } from 'react-router-dom';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import axios from 'axios';
 
 export default function AuthPage() {
     const [activeTab, setActiveTab] = useState('login');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
+    //const [showSuccess, setShowSuccess] = useState(false);
     const [notification, setNotification] = useState({ message: '', type: '' }); // lowercase 'n'
+    const navigate = useNavigate();
 
     const [loginForm, setLoginForm] = useState({ email: '', password: '' });
     const [registerForm, setRegisterForm] = useState({
-        name: '',
         email: '',
         password: '',
         confirmPassword: ''
@@ -97,8 +99,19 @@ export default function AuthPage() {
             setIsLoading(true);
             setTimeout(() => {
                 setIsLoading(false);
-                setNotification({ message: 'User Login successful!', type: 'success' });
-                setTimeout(() => console.log('Login successful:', loginForm), 1500);
+                axios.post(`${API_BASE_URL}/auth/loginUser`, loginForm)
+                    .then(response => {
+                        setNotification({ message: response.data.msg, type: 'success' });
+                        localStorage.setItem('token', response.data.token);
+                        console.log('Login successful:', response.data);
+                        setTimeout(() => navigate('/dashboard'), 700);
+                    })
+                    .catch(error => {
+                        setNotification({
+                            message: error.response?.data?.msg || "Login failed",
+                            type: 'error'
+                        });
+                    });
             }, 1500);
         }
     };
@@ -109,8 +122,19 @@ export default function AuthPage() {
             setIsLoading(true);
             setTimeout(() => {
                 setIsLoading(false);
-                setShowSuccess(true);
-                setTimeout(() => console.log('Registration successful:', registerForm), 1500);
+                axios.post(`${API_BASE_URL}/auth/createUser`, registerForm)
+                    .then(response => {
+                        setNotification({ message: response.data.msg, type: 'success' });
+                        localStorage.removeItem('token');
+                        console.log('Registration successful:', registerForm);
+                        setTimeout(() => navigate('/setup'), 700);
+                    })
+                    .catch(error => {
+                        setNotification({
+                            message: error.response?.data?.msg || "Registration failed",
+                            type: 'error'
+                        });
+                    });
             }, 1500);
         }
     };
@@ -158,7 +182,7 @@ export default function AuthPage() {
                 />
             )}
 
-            {showSuccess && <SuccessModal />}
+            {/* {showSuccess && <SuccessModal />} */}
 
             <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center gap-8 slide-in-up">
                 <LeftSection />

@@ -1,19 +1,20 @@
 import React, { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
+import { uploadResume } from '../api/setup';
 
 const ResumeUpload = ({ onComplete }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [uploadedFile, setUploadedFile] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
-    const [uploadStatus, setUploadStatus] = useState(null); // 'success', 'error', null
+    const [uploadStatus, setUploadStatus] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
     const fileInputRef = useRef(null);
 
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     const ALLOWED_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    const ALLOWED_EXTENSIONS = ['.pdf', '.docx'];
+    const ALLOWED_EXTENSIONS = ['.pdf'];
 
     const validateFile = (file) => {
         if (!file) {
@@ -23,7 +24,7 @@ const ResumeUpload = ({ onComplete }) => {
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
 
         if (!ALLOWED_TYPES.includes(file.type) && !ALLOWED_EXTENSIONS.includes(fileExtension)) {
-            return { valid: false, error: 'Only PDF and DOCX files are allowed' };
+            return { valid: false, error: 'Only PDF and  files are allowed' };
         }
 
         if (file.size > MAX_FILE_SIZE) {
@@ -41,28 +42,36 @@ const ResumeUpload = ({ onComplete }) => {
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
-    const simulateUpload = (file) => {
+    const handleUpload = async (file) => {
         setIsUploading(true);
         setUploadProgress(0);
         setUploadStatus(null);
 
-        const interval = setInterval(() => {
-            setUploadProgress((prev) => {
-                if (prev >= 100) {
-                    clearInterval(interval);
-                    setIsUploading(false);
-                    setUploadStatus('success');
-                    setUploadedFile({
-                        name: file.name,
-                        size: file.size,
-                        type: file.type
-                    });
-                    showSuccessToast();
-                    return 100;
-                }
-                return prev + 10;
+        try {
+            const result = await uploadResume(file, (progress) => {
+                setUploadProgress(progress);
             });
-        }, 200);
+
+            if (result.success) {
+                setIsUploading(false);
+                setUploadStatus('success');
+                setUploadedFile({
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    data: result.data
+                });
+                showSuccessToast();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            setIsUploading(false);
+            setUploadStatus('error');
+            const errorMsg = error.message || 'Upload failed. Please try again.';
+            setErrorMessage(errorMsg);
+            showErrorToast(errorMsg);
+        }
     };
 
     const handleFileSelect = (file) => {
@@ -75,7 +84,7 @@ const ResumeUpload = ({ onComplete }) => {
             return;
         }
 
-        simulateUpload(file);
+        handleUpload(file);
     };
 
     const handleDragEnter = (e) => {
@@ -143,7 +152,6 @@ const ResumeUpload = ({ onComplete }) => {
 
     return (
         <div className="min-h-screen from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-            {/* Toast Notification */}
             {showToast && (
                 <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl transform transition-all duration-300 ${uploadStatus === 'success'
                     ? 'bg-green-500 text-white'
@@ -166,18 +174,15 @@ const ResumeUpload = ({ onComplete }) => {
                 </div>
             )}
 
-            {/* <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl p-8 md:p-12"> */}
-            <div className="   w-full max-w-6xl p-8 md:p-12">
-                {/* Header */}
+            <div className="w-full max-w-6xl p-8 md:p-12">
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
                         <Upload className="w-8 h-8 text-white" />
                     </div>
                     <h2 className="text-3xl font-bold text-gray-800 mb-2">Upload Your Resume</h2>
-                    <p className="text-gray-600">Drop your PDF or DOCX file here, or click to browse</p>
+                    <p className="text-gray-600">Drop your PDF file here, or click to browse</p>
                 </div>
 
-                {/* Upload Area */}
                 <div
                     onDragEnter={handleDragEnter}
                     onDragOver={handleDragOver}
@@ -193,7 +198,7 @@ const ResumeUpload = ({ onComplete }) => {
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept=".pdf,.docx"
+                        accept=".pdf"
                         onChange={handleFileInputChange}
                         className="hidden"
                     />
@@ -221,12 +226,11 @@ const ResumeUpload = ({ onComplete }) => {
 
                             <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
                                 <AlertCircle className="w-4 h-4" />
-                                <span>Supported formats: PDF, DOCX (Max 5MB)</span>
+                                <span>Supported formats: PDF (Max 5MB)</span>
                             </div>
                         </div>
                     )}
 
-                    {/* Upload Progress */}
                     {isUploading && (
                         <div className="text-center">
                             <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6 animate-pulse">
@@ -246,7 +250,6 @@ const ResumeUpload = ({ onComplete }) => {
                         </div>
                     )}
 
-                    {/* Upload Success */}
                     {uploadedFile && uploadStatus === 'success' && (
                         <div className="text-center animate-fade-in">
                             <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
@@ -283,7 +286,7 @@ const ResumeUpload = ({ onComplete }) => {
                                     Upload Another
                                 </button>
                                 <button
-                                    onClick={onComplete}
+                                    onClick={() => onComplete(uploadedFile.data)}
                                     className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                                 >
                                     Continue
@@ -293,7 +296,6 @@ const ResumeUpload = ({ onComplete }) => {
                     )}
                 </div>
 
-                {/* File Requirements */}
                 <div className="mt-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6">
                     <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5 text-blue-600" />
@@ -302,7 +304,7 @@ const ResumeUpload = ({ onComplete }) => {
                     <ul className="space-y-2 text-sm text-gray-700">
                         <li className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                            <span>Accepted formats: PDF, DOCX</span>
+                            <span>Accepted formats: PDF </span>
                         </li>
                         <li className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>

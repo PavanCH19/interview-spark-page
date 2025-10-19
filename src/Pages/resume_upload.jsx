@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
 import { uploadResume } from '../api/setup';
 

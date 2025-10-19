@@ -7,12 +7,16 @@ export const uploadResume = async (file, onProgress) => {
         const formData = new FormData();
         formData.append('resumeFile', file);
 
+        // Get token from localStorage
+        const token = localStorage.getItem('token');
+
         const response = await axios.post(
             `${API_BASE_URL}/setup/upload-resume`,
             formData,
             {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    'Authorization': token || '',
                 },
                 onUploadProgress: (progressEvent) => {
                     const percentCompleted = Math.round(
@@ -25,7 +29,6 @@ export const uploadResume = async (file, onProgress) => {
 
         console.log('Resume Upload Response:', response.data);
 
-        // Check for success status code (200)
         if (response.status === 200) {
             return {
                 success: true,
@@ -33,14 +36,12 @@ export const uploadResume = async (file, onProgress) => {
                 message: response.data.message,
             };
         } else {
-            // Handle non-200 success status codes
             return {
                 success: false,
                 error: response.data.message || 'Upload failed',
             };
         }
     } catch (error) {
-        // Handle error response from backend
         const errorData = error.response?.data;
         const errorMessage = errorData?.message ||
             error.response?.statusText ||

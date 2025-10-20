@@ -1,68 +1,34 @@
-// import React, { useState } from 'react';
+// import React, { useState, useEffect } from 'react';
 // import {
 //     User, Mail, Phone, MapPin, Briefcase, GraduationCap,
-//     Plus, X, Save, Edit3, RotateCcw, Search, CheckCircle,
-//     Calendar, Building, GripVertical, Trash2
+//     Plus, X, Save, Edit3, RotateCcw, Search, CheckCircle, AlertCircle,
+//     Calendar, Building, GripVertical, Trash2, Loader
 // } from 'lucide-react';
+// import axios from "axios"
+// import { Notification } from '../components/Notifications';
+
+// const API_BASE = 'http://localhost:3000/api/auth';
+
+
 
 // const EditableProfile = ({ onComplete }) => {
 //     const [isEditing, setIsEditing] = useState(false);
-//     const [showToast, setShowToast] = useState(false);
-//     const [toastMessage, setToastMessage] = useState('');
+//     const [notification, setNotification] = useState(null);
 //     const [searchSkill, setSearchSkill] = useState('');
 //     const [draggedIndex, setDraggedIndex] = useState(null);
+//     const [isSaving, setIsSaving] = useState(false);
+//     const [isLoading, setIsLoading] = useState(true);
 
-//     // Profile Data
-//     const [profile, setProfile] = useState({
-//         name: 'John Doe',
-//         email: 'john.doe@example.com',
-//         phone: '+1 234 567 8900',
-//         location: 'San Francisco, CA'
+//     // Single source of truth for all data
+//     const [data, setData] = useState({
+//         profile: { name: '', email: '', phone: '', location: '' },
+//         skills: [],
+//         education: [],
+//         experience: []
 //     });
-
-//     const [skills, setSkills] = useState([
-//         'JavaScript', 'React', 'Node.js', 'Python', 'SQL'
-//     ]);
-
-//     const [education, setEducation] = useState([
-//         {
-//             id: 1,
-//             degree: 'Bachelor of Computer Science',
-//             college: 'Stanford University',
-//             startYear: '2015',
-//             endYear: '2019'
-//         },
-//         {
-//             id: 2,
-//             degree: 'Master of Software Engineering',
-//             college: 'MIT',
-//             startYear: '2019',
-//             endYear: '2021'
-//         }
-//     ]);
-
-//     const [experience, setExperience] = useState([
-//         {
-//             id: 1,
-//             role: 'Senior Software Engineer',
-//             company: 'Google',
-//             startDate: '2021-01',
-//             endDate: '2023-12',
-//             current: false
-//         },
-//         {
-//             id: 2,
-//             role: 'Software Engineer',
-//             company: 'Facebook',
-//             startDate: '2023-01',
-//             endDate: '',
-//             current: true
-//         }
-//     ]);
 
 //     const [errors, setErrors] = useState({});
 
-//     // Available skills for autocomplete
 //     const availableSkills = [
 //         'JavaScript', 'React', 'Node.js', 'Python', 'Java', 'C++',
 //         'SQL', 'MongoDB', 'TypeScript', 'Vue.js', 'Angular', 'Django',
@@ -70,149 +36,225 @@
 //         'HTML', 'CSS', 'TailwindCSS', 'Bootstrap', 'REST API', 'GraphQL'
 //     ];
 
-//     const filteredSkills = availableSkills.filter(
-//         skill =>
-//             !skills.includes(skill) &&
-//             skill.toLowerCase().includes(searchSkill.toLowerCase())
-//     );
+//     // Fetch user data on mount
+//     useEffect(() => {
+//         fetchUserData();
+//     }, []);
 
-//     // Validation
+//     const getAuthHeader = () => ({
+//         Authorization: localStorage.getItem('token'),
+//     });
+
+//     const fetchUserData = async () => {
+//         setIsLoading(true);
+//         try {
+//             const response = await axios.get(`${API_BASE}/getUserDetails`, {
+//                 headers: getAuthHeader(),
+//             });
+
+//             const userData = response.data.data;
+//             setData(userData);
+//         } catch (error) {
+//             console.error('Error fetching user data:', error);
+//             showNotification('Failed to load profile', 'error');
+//         } finally {
+//             setIsLoading(false);
+//         }
+//     };
+
+//     const showNotification = (message, type = 'info') => {
+//         setNotification({ message, type });
+//     };
+
 //     const validateProfile = () => {
 //         const newErrors = {};
 
-//         if (!profile.name.trim()) newErrors.name = 'Name is required';
-//         if (!profile.email.trim()) newErrors.email = 'Email is required';
-//         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
+//         if (!data.profile.name?.trim()) newErrors.name = 'Name is required';
+//         if (!data.profile.email?.trim()) newErrors.email = 'Email is required';
+//         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.profile.email)) {
 //             newErrors.email = 'Invalid email format';
 //         }
 
-//         experience.forEach((exp, idx) => {
-//             if (!exp.role.trim()) newErrors[`exp_role_${idx}`] = 'Role is required';
-//             if (!exp.company.trim()) newErrors[`exp_company_${idx}`] = 'Company is required';
+//         data.experience.forEach((exp, idx) => {
+//             if (!exp.role?.trim()) newErrors[`exp_role_${idx}`] = 'Role is required';
+//             if (!exp.company?.trim()) newErrors[`exp_company_${idx}`] = 'Company is required';
 //             if (!exp.startDate) newErrors[`exp_start_${idx}`] = 'Start date is required';
 //         });
 
-//         education.forEach((edu, idx) => {
-//             if (!edu.degree.trim()) newErrors[`edu_degree_${idx}`] = 'Degree is required';
-//             if (!edu.college.trim()) newErrors[`edu_college_${idx}`] = 'College is required';
+//         data.education.forEach((edu, idx) => {
+//             if (!edu.degree?.trim()) newErrors[`edu_degree_${idx}`] = 'Degree is required';
+//             if (!edu.college?.trim()) newErrors[`edu_college_${idx}`] = 'College is required';
 //         });
 
 //         setErrors(newErrors);
 //         return Object.keys(newErrors).length === 0;
 //     };
 
-//     // Handlers
-//     const handleSave = () => {
-//         if (validateProfile()) {
+//     const handleSave = async () => {
+//         if (!validateProfile()) {
+//             showNotification('Please fix all errors before saving', 'error');
+//             return;
+//         }
+
+//         setIsSaving(true);
+//         try {
+//             await axios.post(`${API_BASE}/updateUserDetails`, data, {
+//                 headers: getAuthHeader(),
+//             });
+
+//             showNotification('Profile saved successfully!', 'success');
 //             setIsEditing(false);
-//             showSuccessToast('Profile saved successfully!');
-//         } else {
-//             showSuccessToast('Please fix all errors before saving');
+//         } catch (error) {
+//             console.error('Error saving profile:', error);
+//             showNotification('Failed to save profile', 'error');
+//         } finally {
+//             setIsSaving(false);
 //         }
 //     };
 
 //     const handleReset = () => {
-//         setProfile({
-//             name: 'John Doe',
-//             email: 'john.doe@example.com',
-//             phone: '+1 234 567 8900',
-//             location: 'San Francisco, CA'
-//         });
+//         fetchUserData();
+//         setIsEditing(false);
 //         setErrors({});
-//         showSuccessToast('Profile reset to original values');
+//         showNotification('Profile reset to original values', 'success');
 //     };
 
-//     const showSuccessToast = (message) => {
-//         setToastMessage(message);
-//         setShowToast(true);
-//         setTimeout(() => setShowToast(false), 3000);
+//     const handleNext = () => {
+//         if (!validateProfile()) {
+//             showNotification('Please complete your profile before proceeding', 'error');
+//             return;
+//         }
+//         onComplete();
 //     };
 
-//     // Skills handlers
+//     // Update helpers with data structure
+//     const updateProfile = (field, value) => {
+//         setData(prev => ({
+//             ...prev,
+//             profile: { ...prev.profile, [field]: value }
+//         }));
+//     };
+
 //     const addSkill = (skill) => {
-//         if (skill && !skills.includes(skill)) {
-//             setSkills([...skills, skill]);
+//         if (skill && !data.skills.includes(skill)) {
+//             setData(prev => ({
+//                 ...prev,
+//                 skills: [...prev.skills, skill]
+//             }));
 //             setSearchSkill('');
 //         }
 //     };
 
 //     const removeSkill = (skillToRemove) => {
-//         setSkills(skills.filter(s => s !== skillToRemove));
+//         setData(prev => ({
+//             ...prev,
+//             skills: prev.skills.filter(s => s !== skillToRemove)
+//         }));
 //     };
 
-//     // Education handlers
 //     const addEducation = () => {
-//         setEducation([...education, {
-//             id: Date.now(),
-//             degree: '',
-//             college: '',
-//             startYear: '',
-//             endYear: ''
-//         }]);
-//     };
-
-//     const removeEducation = (id) => {
-//         setEducation(education.filter(e => e.id !== id));
+//         setData(prev => ({
+//             ...prev,
+//             education: [...prev.education, {
+//                 id: Date.now(),
+//                 degree: '',
+//                 college: '',
+//                 startYear: '',
+//                 endYear: ''
+//             }]
+//         }));
 //     };
 
 //     const updateEducation = (id, field, value) => {
-//         setEducation(education.map(e =>
-//             e.id === id ? { ...e, [field]: value } : e
-//         ));
+//         setData(prev => ({
+//             ...prev,
+//             education: prev.education.map(e =>
+//                 e.id === id ? { ...e, [field]: value } : e
+//             )
+//         }));
 //     };
 
-//     // Experience handlers
+//     const removeEducation = (id) => {
+//         setData(prev => ({
+//             ...prev,
+//             education: prev.education.filter(e => e.id !== id)
+//         }));
+//     };
+
 //     const addExperience = () => {
-//         setExperience([...experience, {
-//             id: Date.now(),
-//             role: '',
-//             company: '',
-//             startDate: '',
-//             endDate: '',
-//             current: false
-//         }]);
-//     };
-
-//     const removeExperience = (id) => {
-//         setExperience(experience.filter(e => e.id !== id));
+//         setData(prev => ({
+//             ...prev,
+//             experience: [...prev.experience, {
+//                 id: Date.now(),
+//                 role: '',
+//                 company: '',
+//                 startDate: '',
+//                 endDate: '',
+//                 current: false
+//             }]
+//         }));
 //     };
 
 //     const updateExperience = (id, field, value) => {
-//         setExperience(experience.map(e =>
-//             e.id === id ? { ...e, [field]: value } : e
-//         ));
+//         setData(prev => ({
+//             ...prev,
+//             experience: prev.experience.map(e =>
+//                 e.id === id ? { ...e, [field]: value } : e
+//             )
+//         }));
 //     };
 
-//     // Drag and drop handlers
-//     const handleDragStart = (index) => {
-//         setDraggedIndex(index);
+//     const removeExperience = (id) => {
+//         setData(prev => ({
+//             ...prev,
+//             experience: prev.experience.filter(e => e.id !== id)
+//         }));
 //     };
+
+//     const handleDragStart = (index) => setDraggedIndex(index);
 
 //     const handleDragOver = (e, index) => {
 //         e.preventDefault();
 //         if (draggedIndex === null || draggedIndex === index) return;
 
-//         const newExperience = [...experience];
-//         const draggedItem = newExperience[draggedIndex];
-//         newExperience.splice(draggedIndex, 1);
-//         newExperience.splice(index, 0, draggedItem);
-
-//         setExperience(newExperience);
+//         setData(prev => {
+//             const newExp = [...prev.experience];
+//             const draggedItem = newExp[draggedIndex];
+//             newExp.splice(draggedIndex, 1);
+//             newExp.splice(index, 0, draggedItem);
+//             return { ...prev, experience: newExp };
+//         });
 //         setDraggedIndex(index);
 //     };
 
-//     const handleDragEnd = () => {
-//         setDraggedIndex(null);
-//     };
+//     const handleDragEnd = () => setDraggedIndex(null);
+
+//     const filteredSkills = availableSkills.filter(
+//         skill =>
+//             !data.skills.includes(skill) &&
+//             skill.toLowerCase().includes(searchSkill.toLowerCase())
+//     );
+
+//     if (isLoading) {
+//         return (
+//             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+//                 <div className="flex flex-col items-center gap-4">
+//                     <Loader className="w-8 h-8 animate-spin text-blue-600" />
+//                     <p className="text-gray-600">Loading your profile...</p>
+//                 </div>
+//             </div>
+//         );
+//     }
 
 //     return (
-//         <div className="min-h-screen  from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
-//             {/* Toast Notification */}
-//             {showToast && (
-//                 <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 bg-green-500 text-white rounded-xl shadow-2xl animate-slide-in">
-//                     <CheckCircle className="w-5 h-5" />
-//                     <span className="font-semibold">{toastMessage}</span>
-//                 </div>
+//         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
+//             {/* Notification */}
+//             {notification && (
+//                 <Notification
+//                     message={notification.message}
+//                     type={notification.type}
+//                     onClose={() => setNotification(null)}
+//                 />
 //             )}
 
 //             <div className="max-w-6xl mx-auto">
@@ -233,10 +275,10 @@
 //                                         <Edit3 className="w-5 h-5" />
 //                                         Edit Profile
 //                                     </button>
-
 //                                     <button
-//                                         onClick={onComplete} // define handleNext for navigation/step
-//                                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+//                                         onClick={handleNext}
+//                                         disabled={isSaving}
+//                                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50"
 //                                     >
 //                                         Next
 //                                     </button>
@@ -245,17 +287,28 @@
 //                                 <>
 //                                     <button
 //                                         onClick={handleReset}
-//                                         className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300"
+//                                         disabled={isSaving}
+//                                         className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 disabled:opacity-50"
 //                                     >
 //                                         <RotateCcw className="w-5 h-5" />
 //                                         Reset
 //                                     </button>
 //                                     <button
 //                                         onClick={handleSave}
-//                                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+//                                         disabled={isSaving}
+//                                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50"
 //                                     >
-//                                         <Save className="w-5 h-5" />
-//                                         Save
+//                                         {isSaving ? (
+//                                             <>
+//                                                 <Loader className="w-5 h-5 animate-spin" />
+//                                                 Saving...
+//                                             </>
+//                                         ) : (
+//                                             <>
+//                                                 <Save className="w-5 h-5" />
+//                                                 Save
+//                                             </>
+//                                         )}
 //                                     </button>
 //                                 </>
 //                             )}
@@ -263,59 +316,27 @@
 //                     </div>
 //                 </div>
 
-//                 {/* Basic Info */}
+//                 {/* Basic Info Section */}
 //                 <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
 //                     <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
 //                         <User className="w-6 h-6 text-blue-600" />
 //                         Basic Information
 //                     </h2>
 //                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//                         <div>
-//                             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-//                             <input
-//                                 type="text"
-//                                 disabled={!isEditing}
-//                                 value={profile.name}
-//                                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-//                                 className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'
-//                                     } ${errors.name ? 'border-red-500' : ''}`}
-//                             />
-//                             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-//                         </div>
-//                         <div>
-//                             <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-//                             <input
-//                                 type="email"
-//                                 disabled={!isEditing}
-//                                 value={profile.email}
-//                                 onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-//                                 className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'
-//                                     } ${errors.email ? 'border-red-500' : ''}`}
-//                             />
-//                             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-//                         </div>
-//                         <div>
-//                             <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-//                             <input
-//                                 type="tel"
-//                                 disabled={!isEditing}
-//                                 value={profile.phone}
-//                                 onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-//                                 className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'
-//                                     }`}
-//                             />
-//                         </div>
-//                         <div>
-//                             <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-//                             <input
-//                                 type="text"
-//                                 disabled={!isEditing}
-//                                 value={profile.location}
-//                                 onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-//                                 className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'
-//                                     }`}
-//                             />
-//                         </div>
+//                         {['name', 'email', 'phone', 'location'].map(field => (
+//                             <div key={field}>
+//                                 <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">{field}</label>
+//                                 <input
+//                                     type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
+//                                     disabled={!isEditing}
+//                                     value={data.profile[field]}
+//                                     onChange={(e) => updateProfile(field, e.target.value)}
+//                                     className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'
+//                                         } ${errors[field] ? 'border-red-500' : ''}`}
+//                                 />
+//                                 {errors[field] && <p className="text-red-500 text-sm mt-1">{errors[field]}</p>}
+//                             </div>
+//                         ))}
 //                     </div>
 //                 </div>
 
@@ -356,7 +377,7 @@
 //                     )}
 
 //                     <div className="flex flex-wrap gap-3">
-//                         {skills.map((skill, index) => (
+//                         {data.skills.map((skill, index) => (
 //                             <div
 //                                 key={index}
 //                                 className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105"
@@ -375,7 +396,7 @@
 //                     </div>
 //                 </div>
 
-//                 {/* Education Timeline */}
+//                 {/* Education Section */}
 //                 <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
 //                     <div className="flex items-center justify-between mb-6">
 //                         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -394,75 +415,57 @@
 //                     </div>
 
 //                     <div className="space-y-6">
-//                         {education.map((edu, index) => (
-//                             <div key={edu.id} className="relative pl-8 border-l-4 border-green-300 animate-fade-in">
-//                                 <div className="absolute -left-2.5 top-0 w-5 h-5 bg-green-500 rounded-full border-4 border-white"></div>
-//                                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 hover:shadow-md transition-all duration-300">
-//                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-//                                         <div>
-//                                             <label className="block text-sm font-medium text-gray-700 mb-2">Degree</label>
-//                                             <input
-//                                                 type="text"
-//                                                 disabled={!isEditing}
-//                                                 value={edu.degree}
-//                                                 onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
-//                                                 className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'
-//                                                     } ${errors[`edu_degree_${index}`] ? 'border-red-500' : ''}`}
-//                                             />
-//                                             {errors[`edu_degree_${index}`] && (
-//                                                 <p className="text-red-500 text-sm mt-1">{errors[`edu_degree_${index}`]}</p>
+//                         {data.education.length === 0 ? (
+//                             <p className="text-gray-500">No education information added yet.</p>
+//                         ) : (
+//                             data.education.map((edu, index) => (
+//                                 <div key={edu.id} className="relative pl-8 border-l-4 border-green-300 animate-fade-in">
+//                                     <div className="absolute -left-2.5 top-0 w-5 h-5 bg-green-500 rounded-full border-4 border-white"></div>
+//                                     <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6">
+//                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+//                                             {['degree', 'college'].map(field => (
+//                                                 <div key={field}>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">{field}</label>
+//                                                     <input
+//                                                         type="text"
+//                                                         disabled={!isEditing}
+//                                                         value={edu[field]}
+//                                                         onChange={(e) => updateEducation(edu.id, field, e.target.value)}
+//                                                         className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'
+//                                                             } ${errors[`edu_${field}_${index}`] ? 'border-red-500' : ''}`}
+//                                                     />
+//                                                     {errors[`edu_${field}_${index}`] && (
+//                                                         <p className="text-red-500 text-sm mt-1">{errors[`edu_${field}_${index}`]}</p>
+//                                                     )}
+//                                                 </div>
+//                                             ))}
+//                                         </div>
+//                                         <div className="flex items-center gap-4">
+//                                             {['startYear', 'endYear'].map(field => (
+//                                                 <div key={field} className="flex-1">
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">{field === 'startYear' ? 'Start Year' : 'End Year'}</label>
+//                                                     <input
+//                                                         type="text"
+//                                                         disabled={!isEditing}
+//                                                         value={edu[field]}
+//                                                         onChange={(e) => updateEducation(edu.id, field, e.target.value)}
+//                                                         className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all duration-300"
+//                                                     />
+//                                                 </div>
+//                                             ))}
+//                                             {isEditing && (
+//                                                 <button
+//                                                     onClick={() => removeEducation(edu.id)}
+//                                                     className="mt-6 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all duration-300"
+//                                                 >
+//                                                     <Trash2 className="w-5 h-5" />
+//                                                 </button>
 //                                             )}
 //                                         </div>
-//                                         <div>
-//                                             <label className="block text-sm font-medium text-gray-700 mb-2">College/University</label>
-//                                             <input
-//                                                 type="text"
-//                                                 disabled={!isEditing}
-//                                                 value={edu.college}
-//                                                 onChange={(e) => updateEducation(edu.id, 'college', e.target.value)}
-//                                                 className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'
-//                                                     } ${errors[`edu_college_${index}`] ? 'border-red-500' : ''}`}
-//                                             />
-//                                             {errors[`edu_college_${index}`] && (
-//                                                 <p className="text-red-500 text-sm mt-1">{errors[`edu_college_${index}`]}</p>
-//                                             )}
-//                                         </div>
-//                                     </div>
-//                                     <div className="flex items-center gap-4">
-//                                         <div className="flex-1">
-//                                             <label className="block text-sm font-medium text-gray-700 mb-2">Start Year</label>
-//                                             <input
-//                                                 type="text"
-//                                                 disabled={!isEditing}
-//                                                 value={edu.startYear}
-//                                                 onChange={(e) => updateEducation(edu.id, 'startYear', e.target.value)}
-//                                                 className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'
-//                                                     }`}
-//                                             />
-//                                         </div>
-//                                         <div className="flex-1">
-//                                             <label className="block text-sm font-medium text-gray-700 mb-2">End Year</label>
-//                                             <input
-//                                                 type="text"
-//                                                 disabled={!isEditing}
-//                                                 value={edu.endYear}
-//                                                 onChange={(e) => updateEducation(edu.id, 'endYear', e.target.value)}
-//                                                 className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'
-//                                                     }`}
-//                                             />
-//                                         </div>
-//                                         {isEditing && (
-//                                             <button
-//                                                 onClick={() => removeEducation(edu.id)}
-//                                                 className="mt-6 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all duration-300"
-//                                             >
-//                                                 <Trash2 className="w-5 h-5" />
-//                                             </button>
-//                                         )}
 //                                     </div>
 //                                 </div>
-//                             </div>
-//                         ))}
+//                             ))
+//                         )}
 //                     </div>
 //                 </div>
 
@@ -485,134 +488,97 @@
 //                     </div>
 
 //                     <div className="space-y-4">
-//                         {experience.map((exp, index) => (
-//                             <div
-//                                 key={exp.id}
-//                                 draggable={isEditing}
-//                                 onDragStart={() => handleDragStart(index)}
-//                                 onDragOver={(e) => handleDragOver(e, index)}
-//                                 onDragEnd={handleDragEnd}
-//                                 className={`bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 hover:shadow-md transition-all duration-300 ${isEditing ? 'cursor-move' : ''
-//                                     } ${draggedIndex === index ? 'opacity-50' : ''}`}
-//                             >
-//                                 <div className="flex items-start gap-4">
-//                                     {isEditing && (
-//                                         <div className="pt-2">
-//                                             <GripVertical className="w-5 h-5 text-gray-400" />
-//                                         </div>
-//                                     )}
-//                                     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-//                                         <div>
-//                                             <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-//                                             <input
-//                                                 type="text"
-//                                                 disabled={!isEditing}
-//                                                 value={exp.role}
-//                                                 onChange={(e) => updateExperience(exp.id, 'role', e.target.value)}
-//                                                 className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
-//                                                     } ${errors[`exp_role_${index}`] ? 'border-red-500' : ''}`}
-//                                             />
-//                                             {errors[`exp_role_${index}`] && (
-//                                                 <p className="text-red-500 text-sm mt-1">{errors[`exp_role_${index}`]}</p>
+//                         {data.experience.length === 0 ? (
+//                             <p className="text-gray-500">No experience information added yet.</p>
+//                         ) : (
+//                             data.experience.map((exp, index) => (
+//                                 <div
+//                                     key={exp.id}
+//                                     draggable={isEditing}
+//                                     onDragStart={() => handleDragStart(index)}
+//                                     onDragOver={(e) => handleDragOver(e, index)}
+//                                     onDragEnd={handleDragEnd}
+//                                     className={`bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 hover:shadow-md transition-all duration-300 ${isEditing ? 'cursor-move' : ''
+//                                         } ${draggedIndex === index ? 'opacity-50' : ''}`}
+//                                 >
+//                                     <div className="flex items-start gap-4">
+//                                         {isEditing && <GripVertical className="w-5 h-5 text-gray-400 mt-2" />}
+//                                         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+//                                             {['role', 'company'].map(field => (
+//                                                 <div key={field}>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">{field}</label>
+//                                                     <input
+//                                                         type="text"
+//                                                         disabled={!isEditing}
+//                                                         value={exp[field]}
+//                                                         onChange={(e) => updateExperience(exp.id, field, e.target.value)}
+//                                                         className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
+//                                                             } ${errors[`exp_${field}_${index}`] ? 'border-red-500' : ''}`}
+//                                                     />
+//                                                     {errors[`exp_${field}_${index}`] && (
+//                                                         <p className="text-red-500 text-sm mt-1">{errors[`exp_${field}_${index}`]}</p>
+//                                                     )}
+//                                                 </div>
+//                                             ))}
+//                                             {['startDate', 'endDate'].map(field => (
+//                                                 <div key={field}>
+//                                                     <label className="block text-sm font-medium text-gray-700 mb-2">{field === 'startDate' ? 'Start Date' : 'End Date'}</label>
+//                                                     <input
+//                                                         type="month"
+//                                                         disabled={!isEditing || (field === 'endDate' && exp.current)}
+//                                                         value={exp[field]}
+//                                                         onChange={(e) => updateExperience(exp.id, field, e.target.value)}
+//                                                         className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing && !(field === 'endDate' && exp.current) ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
+//                                                             } ${errors[`exp_${field}_${index}`] ? 'border-red-500' : ''}`}
+//                                                     />
+//                                                     {errors[`exp_${field}_${index}`] && (
+//                                                         <p className="text-red-500 text-sm mt-1">{errors[`exp_${field}_${index}`]}</p>
+//                                                     )}
+//                                                 </div>
+//                                             ))}
+//                                             {isEditing && (
+//                                                 <div className="md:col-span-2 flex items-center gap-2">
+//                                                     <input
+//                                                         type="checkbox"
+//                                                         id={`current-${exp.id}`}
+//                                                         checked={exp.current}
+//                                                         onChange={(e) => updateExperience(exp.id, 'current', e.target.checked)}
+//                                                         className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+//                                                     />
+//                                                     <label htmlFor={`current-${exp.id}`} className="text-sm font-medium text-gray-700">
+//                                                         I currently work here
+//                                                     </label>
+//                                                 </div>
 //                                             )}
-//                                         </div>
-//                                         <div>
-//                                             <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
-//                                             <input
-//                                                 type="text"
-//                                                 disabled={!isEditing}
-//                                                 value={exp.company}
-//                                                 onChange={(e) => updateExperience(exp.id, 'company', e.target.value)}
-//                                                 className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
-//                                                     } ${errors[`exp_company_${index}`] ? 'border-red-500' : ''}`}
-//                                             />
-//                                             {errors[`exp_company_${index}`] && (
-//                                                 <p className="text-red-500 text-sm mt-1">{errors[`exp_company_${index}`]}</p>
-//                                             )}
-//                                         </div>
-//                                         <div>
-//                                             <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-//                                             <input
-//                                                 type="month"
-//                                                 disabled={!isEditing}
-//                                                 value={exp.startDate}
-//                                                 onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)}
-//                                                 className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
-//                                                     } ${errors[`exp_start_${index}`] ? 'border-red-500' : ''}`}
-//                                             />
-//                                             {errors[`exp_start_${index}`] && (
-//                                                 <p className="text-red-500 text-sm mt-1">{errors[`exp_start_${index}`]}</p>
-//                                             )}
-//                                         </div>
-//                                         <div>
-//                                             <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-//                                             <input
-//                                                 type="month"
-//                                                 disabled={!isEditing || exp.current}
-//                                                 value={exp.endDate}
-//                                                 onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)}
-//                                                 className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing && !exp.current ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
-//                                                     }`}
-//                                             />
 //                                         </div>
 //                                         {isEditing && (
-//                                             <div className="md:col-span-2 flex items-center gap-2">
-//                                                 <input
-//                                                     type="checkbox"
-//                                                     id={`current-${exp.id}`}
-//                                                     checked={exp.current}
-//                                                     onChange={(e) => updateExperience(exp.id, 'current', e.target.checked)}
-//                                                     className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-//                                                 />
-//                                                 <label htmlFor={`current-${exp.id}`} className="text-sm font-medium text-gray-700">
-//                                                     I currently work here
-//                                                 </label>
-//                                             </div>
+//                                             <button
+//                                                 onClick={() => removeExperience(exp.id)}
+//                                                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all duration-300"
+//                                             >
+//                                                 <Trash2 className="w-5 h-5" />
+//                                             </button>
 //                                         )}
 //                                     </div>
-//                                     {isEditing && (
-//                                         <button
-//                                             onClick={() => removeExperience(exp.id)}
-//                                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all duration-300"
-//                                         >
-//                                             <Trash2 className="w-5 h-5" />
-//                                         </button>
-//                                     )}
 //                                 </div>
-//                             </div>
-//                         ))}
+//                             ))
+//                         )}
 //                     </div>
 //                 </div>
 //             </div>
 
 //             <style jsx>{`
-//         @keyframes slide-in {
-//           from {
-//             transform: translateX(100%);
-//             opacity: 0;
-//           }
-//           to {
-//             transform: translateX(0);
-//             opacity: 1;
-//           }
-//         }
-//         .animate-slide-in {
-//           animation: slide-in 0.3s ease-out;
-//         }
-//         @keyframes fade-in {
-//           from {
-//             opacity: 0;
-//             transform: translateY(-10px);
-//           }
-//           to {
-//             opacity: 1;
-//             transform: translateY(0);
-//           }
-//         }
-//         .animate-fade-in {
-//           animation: fade-in 0.3s ease-out;
-//         }
-//       `}</style>
+//                 @keyframes slide-in {
+//                     from { transform: translateX(100%); opacity: 0; }
+//                     to { transform: translateX(0); opacity: 1; }
+//                 }
+//                 .animate-slide-in { animation: slide-in 0.3s ease-out; }
+//                 @keyframes fade-in {
+//                     from { opacity: 0; transform: translateY(-10px); }
+//                     to { opacity: 1; transform: translateY(0); }
+//                 }
+//                 .animate-fade-in { animation: fade-in 0.3s ease-out; }
+//             `}</style>
 //         </div>
 //     );
 // };
@@ -620,43 +586,35 @@
 // export default EditableProfile;
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     User, Mail, Phone, MapPin, Briefcase, GraduationCap,
-    Plus, X, Save, Edit3, RotateCcw, Search, CheckCircle,
-    Calendar, Building, GripVertical, Trash2
+    Plus, X, Save, Edit3, RotateCcw, Search, CheckCircle, AlertCircle,
+    Calendar, Building, GripVertical, Trash2, Loader, Code, ExternalLink
 } from 'lucide-react';
+import axios from "axios"
+import { Notification } from '../components/Notifications';
+
+const API_BASE = 'http://localhost:3000/api/auth';
 
 const EditableProfile = ({ onComplete }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [showToast, setShowToast] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
+    const [notification, setNotification] = useState(null);
     const [searchSkill, setSearchSkill] = useState('');
     const [draggedIndex, setDraggedIndex] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Initial data from JSON
-    const initialData = {
-        profile: {
-            name: "PAVAN CHANDRAPPA HOTTIGOUDRA",
-            email: "pavandvh27@gmail.com",
-            phone: "+91 7483022523",
-            location: ""
-        },
-        skills: [
-            "aws", "bootstrap", "ci/cd", "express", "fastapi", "git", "java", "jwt", "lambda", "mongodb", "mysql", "node.js", "prototyping", "python", "rest api", "serverless"
-        ],
+    const [data, setData] = useState({
+        profile: { name: '', email: '', phone: '', location: '' },
+        skills: [],
         education: [],
-        experience: []
-    };
+        experience: [],
+        projects: []
+    });
 
-    // Profile Data
-    const [profile, setProfile] = useState(initialData.profile);
-    const [skills, setSkills] = useState(initialData.skills);
-    const [education, setEducation] = useState(initialData.education);
-    const [experience, setExperience] = useState(initialData.experience);
     const [errors, setErrors] = useState({});
 
-    // Available skills for autocomplete
     const availableSkills = [
         'JavaScript', 'React', 'Node.js', 'Python', 'Java', 'C++',
         'SQL', 'MongoDB', 'TypeScript', 'Vue.js', 'Angular', 'Django',
@@ -664,156 +622,288 @@ const EditableProfile = ({ onComplete }) => {
         'HTML', 'CSS', 'TailwindCSS', 'Bootstrap', 'REST API', 'GraphQL'
     ];
 
-    const filteredSkills = availableSkills.filter(
-        skill =>
-            !skills.includes(skill) &&
-            skill.toLowerCase().includes(searchSkill.toLowerCase())
-    );
+    useEffect(() => {
+        fetchUserData();
+    }, []);
 
-    // Validation
+    const getAuthHeader = () => ({
+        Authorization: localStorage.getItem('token'),
+    });
+
+    const fetchUserData = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.get(`${API_BASE}/getUserDetails`, {
+                headers: getAuthHeader(),
+            });
+            const userData = response.data.data;
+            // Ensure all arrays exist and are initialized properly
+            setData({
+                profile: userData?.profile || { name: '', email: '', phone: '', location: '' },
+                skills: Array.isArray(userData?.skills) ? userData.skills : [],
+                education: Array.isArray(userData?.education) ? userData.education : [],
+                experience: Array.isArray(userData?.experience) ? userData.experience : [],
+                projects: Array.isArray(userData?.projects) ? userData.projects : []
+            });
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            showNotification('Failed to load profile', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const showNotification = (message, type = 'info') => {
+        setNotification({ message, type });
+    };
+
     const validateProfile = () => {
         const newErrors = {};
 
-        if (!profile.name.trim()) newErrors.name = 'Name is required';
-        if (!profile.email.trim()) newErrors.email = 'Email is required';
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
+        if (!data.profile.name?.trim()) newErrors.name = 'Name is required';
+        if (!data.profile.email?.trim()) newErrors.email = 'Email is required';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.profile.email)) {
             newErrors.email = 'Invalid email format';
         }
 
-        experience.forEach((exp, idx) => {
-            if (!exp.role.trim()) newErrors[`exp_role_${idx}`] = 'Role is required';
-            if (!exp.company.trim()) newErrors[`exp_company_${idx}`] = 'Company is required';
+        data.experience.forEach((exp, idx) => {
+            if (!exp.role?.trim()) newErrors[`exp_role_${idx}`] = 'Role is required';
+            if (!exp.company?.trim()) newErrors[`exp_company_${idx}`] = 'Company is required';
             if (!exp.startDate) newErrors[`exp_start_${idx}`] = 'Start date is required';
         });
 
-        education.forEach((edu, idx) => {
-            if (!edu.degree.trim()) newErrors[`edu_degree_${idx}`] = 'Degree is required';
-            if (!edu.college.trim()) newErrors[`edu_college_${idx}`] = 'College is required';
+        data.education.forEach((edu, idx) => {
+            if (!edu.degree?.trim()) newErrors[`edu_degree_${idx}`] = 'Degree is required';
+            if (!edu.college?.trim()) newErrors[`edu_college_${idx}`] = 'College is required';
+        });
+
+        data.projects.forEach((proj, idx) => {
+            if (!proj.title?.trim()) newErrors[`proj_title_${idx}`] = 'Project title is required';
         });
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    // Handlers
-    const handleSave = () => {
-        if (validateProfile()) {
+    const handleSave = async () => {
+        if (!validateProfile()) {
+            showNotification('Please fix all errors before saving', 'error');
+            return;
+        }
+        setIsSaving(true);
+        try {
+            await axios.post(`${API_BASE}/updateUserDetails`, data, {
+                headers: getAuthHeader(),
+            });
+            showNotification('Profile saved successfully!', 'success');
             setIsEditing(false);
-            showSuccessToast('Profile saved successfully!');
-
-            // Log updated data to console
-            const updatedData = {
-                profile,
-                skills,
-                education,
-                experience
-            };
-            console.log('Updated Profile Data:', updatedData);
-        } else {
-            showSuccessToast('Please fix all errors before saving');
+        } catch (error) {
+            console.error('Error saving profile:', error);
+            showNotification('Failed to save profile', 'error');
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const handleReset = () => {
-        setProfile(initialData.profile);
-        setSkills(initialData.skills);
-        setEducation(initialData.education);
-        setExperience(initialData.experience);
+        fetchUserData();
+        setIsEditing(false);
         setErrors({});
-        showSuccessToast('Profile reset to original values');
+        showNotification('Profile reset to original values', 'success');
     };
 
-    const showSuccessToast = (message) => {
-        setToastMessage(message);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
+    const handleNext = () => {
+        if (!validateProfile()) {
+            showNotification('Please complete your profile before proceeding', 'error');
+            return;
+        }
+        onComplete();
     };
 
-    // Skills handlers
+    const updateProfile = (field, value) => {
+        setData(prev => ({
+            ...prev,
+            profile: { ...prev.profile, [field]: value }
+        }));
+    };
+
     const addSkill = (skill) => {
-        if (skill && !skills.includes(skill)) {
-            setSkills([...skills, skill]);
+        if (skill && !data.skills.includes(skill)) {
+            setData(prev => ({
+                ...prev,
+                skills: [...prev.skills, skill]
+            }));
             setSearchSkill('');
         }
     };
 
     const removeSkill = (skillToRemove) => {
-        setSkills(skills.filter(s => s !== skillToRemove));
+        setData(prev => ({
+            ...prev,
+            skills: prev.skills.filter(s => s !== skillToRemove)
+        }));
     };
 
-    // Education handlers
     const addEducation = () => {
-        setEducation([...education, {
-            id: Date.now(),
-            degree: '',
-            college: '',
-            startYear: '',
-            endYear: ''
-        }]);
-    };
-
-    const removeEducation = (id) => {
-        setEducation(education.filter(e => e.id !== id));
+        setData(prev => ({
+            ...prev,
+            education: [...prev.education, {
+                id: Date.now(),
+                degree: '',
+                college: '',
+                startYear: '',
+                endYear: ''
+            }]
+        }));
     };
 
     const updateEducation = (id, field, value) => {
-        setEducation(education.map(e =>
-            e.id === id ? { ...e, [field]: value } : e
-        ));
+        setData(prev => ({
+            ...prev,
+            education: prev.education.map(e =>
+                e.id === id ? { ...e, [field]: value } : e
+            )
+        }));
     };
 
-    // Experience handlers
+    const removeEducation = (id) => {
+        setData(prev => ({
+            ...prev,
+            education: prev.education.filter(e => e.id !== id)
+        }));
+    };
+
     const addExperience = () => {
-        setExperience([...experience, {
-            id: Date.now(),
-            role: '',
-            company: '',
-            startDate: '',
-            endDate: '',
-            current: false
-        }]);
-    };
-
-    const removeExperience = (id) => {
-        setExperience(experience.filter(e => e.id !== id));
+        setData(prev => ({
+            ...prev,
+            experience: [...prev.experience, {
+                id: Date.now(),
+                role: '',
+                company: '',
+                startDate: '',
+                endDate: '',
+                current: false
+            }]
+        }));
     };
 
     const updateExperience = (id, field, value) => {
-        setExperience(experience.map(e =>
-            e.id === id ? { ...e, [field]: value } : e
-        ));
+        setData(prev => ({
+            ...prev,
+            experience: prev.experience.map(e =>
+                e.id === id ? { ...e, [field]: value } : e
+            )
+        }));
     };
 
-    // Drag and drop handlers
-    const handleDragStart = (index) => {
-        setDraggedIndex(index);
+    const removeExperience = (id) => {
+        setData(prev => ({
+            ...prev,
+            experience: prev.experience.filter(e => e.id !== id)
+        }));
     };
+
+    const addProject = () => {
+        setData(prev => ({
+            ...prev,
+            projects: [...prev.projects, {
+                id: Date.now(),
+                title: '',
+                description: '',
+                technologies: [],
+                startDate: '',
+                endDate: '',
+                link: '',
+                github: ''
+            }]
+        }));
+    };
+
+    const updateProject = (id, field, value) => {
+        setData(prev => ({
+            ...prev,
+            projects: prev.projects.map(p =>
+                p.id === id ? { ...p, [field]: value } : p
+            )
+        }));
+    };
+
+    const removeProject = (id) => {
+        setData(prev => ({
+            ...prev,
+            projects: prev.projects.filter(p => p.id !== id)
+        }));
+    };
+
+    const addProjectTech = (projectId, tech) => {
+        if (tech?.trim()) {
+            setData(prev => ({
+                ...prev,
+                projects: prev.projects.map(p =>
+                    p.id === projectId ? {
+                        ...p,
+                        technologies: [...new Set([...p.technologies, tech])]
+                    } : p
+                )
+            }));
+        }
+    };
+
+    const removeProjectTech = (projectId, tech) => {
+        setData(prev => ({
+            ...prev,
+            projects: prev.projects.map(p =>
+                p.id === projectId ? {
+                    ...p,
+                    technologies: p.technologies.filter(t => t !== tech)
+                } : p
+            )
+        }));
+    };
+
+    const handleDragStart = (index) => setDraggedIndex(index);
 
     const handleDragOver = (e, index) => {
         e.preventDefault();
         if (draggedIndex === null || draggedIndex === index) return;
 
-        const newExperience = [...experience];
-        const draggedItem = newExperience[draggedIndex];
-        newExperience.splice(draggedIndex, 1);
-        newExperience.splice(index, 0, draggedItem);
-
-        setExperience(newExperience);
+        setData(prev => {
+            const newExp = [...prev.experience];
+            const draggedItem = newExp[draggedIndex];
+            newExp.splice(draggedIndex, 1);
+            newExp.splice(index, 0, draggedItem);
+            return { ...prev, experience: newExp };
+        });
         setDraggedIndex(index);
     };
 
-    const handleDragEnd = () => {
-        setDraggedIndex(null);
-    };
+    const handleDragEnd = () => setDraggedIndex(null);
+
+    const filteredSkills = availableSkills.filter(
+        skill =>
+            !data.skills.includes(skill) &&
+            skill.toLowerCase().includes(searchSkill.toLowerCase())
+    );
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader className="w-8 h-8 animate-spin text-blue-600" />
+                    <p className="text-gray-600">Loading your profile...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
-            {/* Toast Notification */}
-            {showToast && (
-                <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 bg-green-500 text-white rounded-xl shadow-2xl animate-slide-in">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-semibold">{toastMessage}</span>
-                </div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
+            {notification && (
+                <Notification
+                    message={notification.message}
+                    type={notification.type}
+                    onClose={() => setNotification(null)}
+                />
             )}
 
             <div className="max-w-6xl mx-auto">
@@ -834,10 +924,10 @@ const EditableProfile = ({ onComplete }) => {
                                         <Edit3 className="w-5 h-5" />
                                         Edit Profile
                                     </button>
-
                                     <button
-                                        onClick={onComplete}
-                                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                                        onClick={handleNext}
+                                        disabled={isSaving}
+                                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50"
                                     >
                                         Next
                                     </button>
@@ -846,17 +936,28 @@ const EditableProfile = ({ onComplete }) => {
                                 <>
                                     <button
                                         onClick={handleReset}
-                                        className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300"
+                                        disabled={isSaving}
+                                        className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 disabled:opacity-50"
                                     >
                                         <RotateCcw className="w-5 h-5" />
                                         Reset
                                     </button>
                                     <button
                                         onClick={handleSave}
-                                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                                        disabled={isSaving}
+                                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50"
                                     >
-                                        <Save className="w-5 h-5" />
-                                        Save
+                                        {isSaving ? (
+                                            <>
+                                                <Loader className="w-5 h-5 animate-spin" />
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save className="w-5 h-5" />
+                                                Save
+                                            </>
+                                        )}
                                     </button>
                                 </>
                             )}
@@ -864,59 +965,26 @@ const EditableProfile = ({ onComplete }) => {
                     </div>
                 </div>
 
-                {/* Basic Info */}
+                {/* Basic Info Section */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                         <User className="w-6 h-6 text-blue-600" />
                         Basic Information
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                            <input
-                                type="text"
-                                disabled={!isEditing}
-                                value={profile.name}
-                                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                                className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'
-                                    } ${errors.name ? 'border-red-500' : ''}`}
-                            />
-                            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                            <input
-                                type="email"
-                                disabled={!isEditing}
-                                value={profile.email}
-                                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'
-                                    } ${errors.email ? 'border-red-500' : ''}`}
-                            />
-                            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                            <input
-                                type="tel"
-                                disabled={!isEditing}
-                                value={profile.phone}
-                                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                                className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'
-                                    }`}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                            <input
-                                type="text"
-                                disabled={!isEditing}
-                                value={profile.location}
-                                onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                                className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'
-                                    }`}
-                            />
-                        </div>
+                        {['name', 'email', 'phone', 'location'].map(field => (
+                            <div key={field}>
+                                <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">{field}</label>
+                                <input
+                                    type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
+                                    disabled={!isEditing}
+                                    value={data.profile[field]}
+                                    onChange={(e) => updateProfile(field, e.target.value)}
+                                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-gray-50 border-gray-200'} ${errors[field] ? 'border-red-500' : ''}`}
+                                />
+                                {errors[field] && <p className="text-red-500 text-sm mt-1">{errors[field]}</p>}
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -957,7 +1025,7 @@ const EditableProfile = ({ onComplete }) => {
                     )}
 
                     <div className="flex flex-wrap gap-3">
-                        {skills.map((skill, index) => (
+                        {data.skills.map((skill, index) => (
                             <div
                                 key={index}
                                 className="group flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105"
@@ -976,7 +1044,7 @@ const EditableProfile = ({ onComplete }) => {
                     </div>
                 </div>
 
-                {/* Education Timeline */}
+                {/* Education Section */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -995,66 +1063,43 @@ const EditableProfile = ({ onComplete }) => {
                     </div>
 
                     <div className="space-y-6">
-                        {education.length === 0 ? (
+                        {data.education.length === 0 ? (
                             <p className="text-gray-500">No education information added yet.</p>
                         ) : (
-                            education.map((edu, index) => (
+                            data.education.map((edu, index) => (
                                 <div key={edu.id} className="relative pl-8 border-l-4 border-green-300 animate-fade-in">
                                     <div className="absolute -left-2.5 top-0 w-5 h-5 bg-green-500 rounded-full border-4 border-white"></div>
-                                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 hover:shadow-md transition-all duration-300">
+                                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">Degree</label>
-                                                <input
-                                                    type="text"
-                                                    disabled={!isEditing}
-                                                    value={edu.degree}
-                                                    onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
-                                                    className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'
-                                                        } ${errors[`edu_degree_${index}`] ? 'border-red-500' : ''}`}
-                                                />
-                                                {errors[`edu_degree_${index}`] && (
-                                                    <p className="text-red-500 text-sm mt-1">{errors[`edu_degree_${index}`]}</p>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">College/University</label>
-                                                <input
-                                                    type="text"
-                                                    disabled={!isEditing}
-                                                    value={edu.college}
-                                                    onChange={(e) => updateEducation(edu.id, 'college', e.target.value)}
-                                                    className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'
-                                                        } ${errors[`edu_college_${index}`] ? 'border-red-500' : ''}`}
-                                                />
-                                                {errors[`edu_college_${index}`] && (
-                                                    <p className="text-red-500 text-sm mt-1">{errors[`edu_college_${index}`]}</p>
-                                                )}
-                                            </div>
+                                            {['degree', 'college'].map(field => (
+                                                <div key={field}>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">{field}</label>
+                                                    <input
+                                                        type="text"
+                                                        disabled={!isEditing}
+                                                        value={edu[field]}
+                                                        onChange={(e) => updateEducation(edu.id, field, e.target.value)}
+                                                        className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'} ${errors[`edu_${field}_${index}`] ? 'border-red-500' : ''}`}
+                                                    />
+                                                    {errors[`edu_${field}_${index}`] && (
+                                                        <p className="text-red-500 text-sm mt-1">{errors[`edu_${field}_${index}`]}</p>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <div className="flex-1">
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">Start Year</label>
-                                                <input
-                                                    type="text"
-                                                    disabled={!isEditing}
-                                                    value={edu.startYear}
-                                                    onChange={(e) => updateEducation(edu.id, 'startYear', e.target.value)}
-                                                    className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'
-                                                        }`}
-                                                />
-                                            </div>
-                                            <div className="flex-1">
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">End Year</label>
-                                                <input
-                                                    type="text"
-                                                    disabled={!isEditing}
-                                                    value={edu.endYear}
-                                                    onChange={(e) => updateEducation(edu.id, 'endYear', e.target.value)}
-                                                    className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-green-500 focus:outline-none' : 'bg-white border-gray-200'
-                                                        }`}
-                                                />
-                                            </div>
+                                            {['startYear', 'endYear'].map(field => (
+                                                <div key={field} className="flex-1">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">{field === 'startYear' ? 'Start Year' : 'End Year'}</label>
+                                                    <input
+                                                        type="text"
+                                                        disabled={!isEditing}
+                                                        value={edu[field]}
+                                                        onChange={(e) => updateEducation(edu.id, field, e.target.value)}
+                                                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all duration-300"
+                                                    />
+                                                </div>
+                                            ))}
                                             {isEditing && (
                                                 <button
                                                     onClick={() => removeEducation(edu.id)}
@@ -1072,7 +1117,7 @@ const EditableProfile = ({ onComplete }) => {
                 </div>
 
                 {/* Experience Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-6">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                             <Building className="w-6 h-6 text-blue-600" />
@@ -1090,79 +1135,51 @@ const EditableProfile = ({ onComplete }) => {
                     </div>
 
                     <div className="space-y-4">
-                        {experience.length === 0 ? (
+                        {data.experience.length === 0 ? (
                             <p className="text-gray-500">No experience information added yet.</p>
                         ) : (
-                            experience.map((exp, index) => (
+                            data.experience.map((exp, index) => (
                                 <div
                                     key={exp.id}
                                     draggable={isEditing}
                                     onDragStart={() => handleDragStart(index)}
                                     onDragOver={(e) => handleDragOver(e, index)}
                                     onDragEnd={handleDragEnd}
-                                    className={`bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 hover:shadow-md transition-all duration-300 ${isEditing ? 'cursor-move' : ''
-                                        } ${draggedIndex === index ? 'opacity-50' : ''}`}
+                                    className={`bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 hover:shadow-md transition-all duration-300 ${isEditing ? 'cursor-move' : ''} ${draggedIndex === index ? 'opacity-50' : ''}`}
                                 >
                                     <div className="flex items-start gap-4">
-                                        {isEditing && (
-                                            <div className="pt-2">
-                                                <GripVertical className="w-5 h-5 text-gray-400" />
-                                            </div>
-                                        )}
+                                        {isEditing && <GripVertical className="w-5 h-5 text-gray-400 mt-2" />}
                                         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                                                <input
-                                                    type="text"
-                                                    disabled={!isEditing}
-                                                    value={exp.role}
-                                                    onChange={(e) => updateExperience(exp.id, 'role', e.target.value)}
-                                                    className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
-                                                        } ${errors[`exp_role_${index}`] ? 'border-red-500' : ''}`}
-                                                />
-                                                {errors[`exp_role_${index}`] && (
-                                                    <p className="text-red-500 text-sm mt-1">{errors[`exp_role_${index}`]}</p>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
-                                                <input
-                                                    type="text"
-                                                    disabled={!isEditing}
-                                                    value={exp.company}
-                                                    onChange={(e) => updateExperience(exp.id, 'company', e.target.value)}
-                                                    className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
-                                                        } ${errors[`exp_company_${index}`] ? 'border-red-500' : ''}`}
-                                                />
-                                                {errors[`exp_company_${index}`] && (
-                                                    <p className="text-red-500 text-sm mt-1">{errors[`exp_company_${index}`]}</p>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                                                <input
-                                                    type="month"
-                                                    disabled={!isEditing}
-                                                    value={exp.startDate}
-                                                    onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)}
-                                                    className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
-                                                        } ${errors[`exp_start_${index}`] ? 'border-red-500' : ''}`}
-                                                />
-                                                {errors[`exp_start_${index}`] && (
-                                                    <p className="text-red-500 text-sm mt-1">{errors[`exp_start_${index}`]}</p>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                                                <input
-                                                    type="month"
-                                                    disabled={!isEditing || exp.current}
-                                                    value={exp.endDate}
-                                                    onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)}
-                                                    className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing && !exp.current ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'
-                                                        }`}
-                                                />
-                                            </div>
+                                            {['role', 'company'].map(field => (
+                                                <div key={field}>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">{field}</label>
+                                                    <input
+                                                        type="text"
+                                                        disabled={!isEditing}
+                                                        value={exp[field]}
+                                                        onChange={(e) => updateExperience(exp.id, field, e.target.value)}
+                                                        className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'} ${errors[`exp_${field}_${index}`] ? 'border-red-500' : ''}`}
+                                                    />
+                                                    {errors[`exp_${field}_${index}`] && (
+                                                        <p className="text-red-500 text-sm mt-1">{errors[`exp_${field}_${index}`]}</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            {['startDate', 'endDate'].map(field => (
+                                                <div key={field}>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">{field === 'startDate' ? 'Start Date' : 'End Date'}</label>
+                                                    <input
+                                                        type="month"
+                                                        disabled={!isEditing || (field === 'endDate' && exp.current)}
+                                                        value={exp[field]}
+                                                        onChange={(e) => updateExperience(exp.id, field, e.target.value)}
+                                                        className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing && !(field === 'endDate' && exp.current) ? 'border-gray-300 focus:border-blue-500 focus:outline-none' : 'bg-white border-gray-200'} ${errors[`exp_${field}_${index}`] ? 'border-red-500' : ''}`}
+                                                    />
+                                                    {errors[`exp_${field}_${index}`] && (
+                                                        <p className="text-red-500 text-sm mt-1">{errors[`exp_${field}_${index}`]}</p>
+                                                    )}
+                                                </div>
+                                            ))}
                                             {isEditing && (
                                                 <div className="md:col-span-2 flex items-center gap-2">
                                                     <input
@@ -1192,36 +1209,200 @@ const EditableProfile = ({ onComplete }) => {
                         )}
                     </div>
                 </div>
+
+                {/* Projects Section */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                            <Code className="w-6 h-6 text-orange-600" />
+                            Projects
+                        </h2>
+                        {isEditing && (
+                            <button
+                                onClick={addProject}
+                                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-all duration-300"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Add
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="space-y-6">
+                        {data.projects.length === 0 ? (
+                            <p className="text-gray-500">No projects added yet.</p>
+                        ) : (
+                            data.projects.map((proj, index) => (
+                                <div key={proj.id} className="relative pl-8 border-l-4 border-orange-300 animate-fade-in">
+                                    <div className="absolute -left-2.5 top-0 w-5 h-5 bg-orange-500 rounded-full border-4 border-white"></div>
+                                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-6">
+                                        {/* Project Title */}
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Project Title</label>
+                                            <input
+                                                type="text"
+                                                disabled={!isEditing}
+                                                value={proj.title}
+                                                onChange={(e) => updateProject(proj.id, 'title', e.target.value)}
+                                                className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-orange-500 focus:outline-none' : 'bg-white border-gray-200'} ${errors[`proj_title_${index}`] ? 'border-red-500' : ''}`}
+                                            />
+                                            {errors[`proj_title_${index}`] && (
+                                                <p className="text-red-500 text-sm mt-1">{errors[`proj_title_${index}`]}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Project Description */}
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                            <textarea
+                                                disabled={!isEditing}
+                                                value={proj.description}
+                                                onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
+                                                rows="3"
+                                                className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 resize-none ${isEditing ? 'border-gray-300 focus:border-orange-500 focus:outline-none' : 'bg-white border-gray-200'}`}
+                                                placeholder="Describe your project..."
+                                            />
+                                        </div>
+
+                                        {/* Dates */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            {['startDate', 'endDate'].map(field => (
+                                                <div key={field}>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        {field === 'startDate' ? 'Start Date' : 'End Date'}
+                                                    </label>
+                                                    <input
+                                                        type="month"
+                                                        disabled={!isEditing}
+                                                        value={proj[field]}
+                                                        onChange={(e) => updateProject(proj.id, field, e.target.value)}
+                                                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none transition-all duration-300"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Links */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            {['link', 'github'].map(field => (
+                                                <div key={field}>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
+                                                        {field === 'link' ? 'Project Link' : 'GitHub URL'}
+                                                    </label>
+                                                    <input
+                                                        type="url"
+                                                        disabled={!isEditing}
+                                                        value={proj[field]}
+                                                        onChange={(e) => updateProject(proj.id, field, e.target.value)}
+                                                        className={`w-full px-4 py-2 border-2 rounded-lg transition-all duration-300 ${isEditing ? 'border-gray-300 focus:border-orange-500 focus:outline-none' : 'bg-white border-gray-200'}`}
+                                                        placeholder={field === 'link' ? 'https://example.com' : 'https://github.com/...'}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Technologies */}
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Technologies Used</label>
+                                            {isEditing && (
+                                                <div className="flex gap-2 mb-3">
+                                                    <input
+                                                        type="text"
+                                                        id={`tech-input-${proj.id}`}
+                                                        placeholder="Add technology..."
+                                                        onKeyPress={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                addProjectTech(proj.id, e.target.value);
+                                                                e.target.value = '';
+                                                            }
+                                                        }}
+                                                        className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none transition-all duration-300"
+                                                    />
+                                                    <button
+                                                        onClick={() => {
+                                                            const input = document.getElementById(`tech-input-${proj.id}`);
+                                                            addProjectTech(proj.id, input.value);
+                                                            input.value = '';
+                                                        }}
+                                                        className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-300"
+                                                    >
+                                                        <Plus className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                            <div className="flex flex-wrap gap-2">
+                                                {proj.technologies.map((tech, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-orange-200 to-amber-200 text-orange-700 rounded-full text-sm font-medium"
+                                                    >
+                                                        <span>{tech}</span>
+                                                        {isEditing && (
+                                                            <button
+                                                                onClick={() => removeProjectTech(proj.id, tech)}
+                                                                className="hover:text-orange-900"
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        <div className="flex justify-end gap-2">
+                                            {proj.link && !isEditing && (
+                                                <a
+                                                    href={proj.link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
+                                                >
+                                                    <ExternalLink className="w-4 h-4" />
+                                                    Visit
+                                                </a>
+                                            )}
+                                            {proj.github && !isEditing && (
+                                                <a
+                                                    href={proj.github}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-300"
+                                                >
+                                                    <Code className="w-4 h-4" />
+                                                    GitHub
+                                                </a>
+                                            )}
+                                            {isEditing && (
+                                                <button
+                                                    onClick={() => removeProject(proj.id)}
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all duration-300"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
             </div>
 
             <style jsx>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-      `}</style>
+                @keyframes slide-in {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                .animate-slide-in { animation: slide-in 0.3s ease-out; }
+                @keyframes fade-in {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in { animation: fade-in 0.3s ease-out; }
+            `}</style>
         </div>
     );
 };

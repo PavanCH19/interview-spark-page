@@ -14,17 +14,72 @@ import AudioVideoCaptureUI from './Pages/audio_capture';
 import { Notification } from './components/Notifications';
 
 // Fixed Protected Route Component
+// const ProtectedRoute = ({ children }) => {
+//   const [redirect, setRedirect] = useState(false);
+//   const [showNotification, setShowNotification] = useState(false);
+//   const token = localStorage.getItem('token');
+
+//   useEffect(() => {
+//     if (!token) {
+//       setShowNotification(true);
+
+//       // Wait 2 seconds before redirect
+//       const timer = setTimeout(() => {
+//         setRedirect(true);
+//       }, 2000);
+
+//       return () => clearTimeout(timer);
+//     }
+//   }, [token]);
+
+//   if (!token) {
+//     if (redirect) {
+//       return <Navigate to="/auth" replace />;
+//     }
+
+//     return (
+//       <>
+//         {showNotification && (
+//           <Notification
+//             message="Please log in to access this page."
+//             type="error"
+//             duration={2000}
+//             onClose={() => setShowNotification(false)}
+//           />
+//         )}
+//       </>
+//     );
+//   }
+
+//   return children;
+// };
+
+// import jwt_decode from 'jwt-decode'; // npm install jwt-decode
+
 const ProtectedRoute = ({ children }) => {
   const [redirect, setRedirect] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const token = localStorage.getItem('token');
 
+  // Helper to decode JWT payload without external lib
+  const isTokenValid = (token) => {
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      return payload.exp && payload.exp > currentTime;
+    } catch (e) {
+      console.error('Invalid token', e);
+      return false;
+    }
+  };
+
   useEffect(() => {
-    if (!token) {
+    if (!isTokenValid(token)) {
       setShowNotification(true);
 
-      // Wait 2 seconds before redirect
       const timer = setTimeout(() => {
+        localStorage.removeItem('token'); // remove expired token
         setRedirect(true);
       }, 2000);
 
@@ -32,16 +87,14 @@ const ProtectedRoute = ({ children }) => {
     }
   }, [token]);
 
-  if (!token) {
-    if (redirect) {
-      return <Navigate to="/auth" replace />;
-    }
+  if (!token || !isTokenValid(token) || redirect) {
+    if (redirect) return <Navigate to="/auth" replace />;
 
     return (
       <>
         {showNotification && (
           <Notification
-            message="Please log in to access this page."
+            message="Session expired. Please log in again."
             type="error"
             duration={2000}
             onClose={() => setShowNotification(false)}
@@ -53,6 +106,7 @@ const ProtectedRoute = ({ children }) => {
 
   return children;
 };
+
 
 // Route Layout
 function App() {

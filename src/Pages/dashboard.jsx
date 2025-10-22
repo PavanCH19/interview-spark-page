@@ -1,24 +1,41 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { User, BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Zap, ChevronRight, Play, RotateCcw, Download, Shield, Edit2, Save, X, CheckCircle, AlertCircle, Trophy, Flame, Star, Clock, MessageSquare, BarChart3, Brain, Menu, Home, LogOut, HelpCircle, GripVertical } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+
 
 // Zustand-like store using React hooks
+
+
 const useStore = () => {
+    const location = useLocation();
+    const userData = location.state?.userData || {}; // Safe fallback
+
+    const userProfile = userData?.user?.profile || {};
+    const userEducation = userData?.user?.education || []; // corrected spelling
+
     const [user, setUser] = useState({
-        name: 'Alex Johnson',
-        email: 'alex.johnson@email.com',
-        title: 'Senior Software Engineer',
-        experience: '5 years',
-        location: 'San Francisco, CA',
-        skills: ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'System Design'],
-        education: 'BS Computer Science - Stanford University',
-        careerPath: 'Software Engineering',
-        suggestedPath: 'Technical Lead',
-        level: 12,
-        xp: 2840,
-        xpToNext: 3000,
-        streak: 7,
-        badges: ['Fast Learner', 'SQL Master', 'Interview Pro']
+        name: userProfile?.name || "",
+        email: userData?.user?.email || "",
+        title: userProfile?.title || "Senior Software Engineer",
+        experience: userProfile?.experience || "5 years",
+        location: userProfile?.location || "",
+        skills: userProfile?.skills || [
+            "JavaScript",
+            "React",
+            "Node.js",
+            "Python",
+            "SQL",
+            "System Design",
+        ],
+        education: userEducation[0]?.college || "BS Computer Science - Stanford University",
+        careerPath: userProfile?.careerPath || "Software Engineering",
+        suggestedPath: userProfile?.suggestedPath || "Technical Lead",
+        level: userProfile?.level || 12,
+        xp: userProfile?.xp || 2840,
+        xpToNext: userProfile?.xpToNext || 3000,
+        streak: userProfile?.streak || 7,
+        badges: userProfile?.badges || ["Fast Learner", "SQL Master", "Interview Pro"],
     });
 
     const [isEditing, setIsEditing] = useState(false);
@@ -47,7 +64,7 @@ const useStore = () => {
         sidebarOpen,
         setSidebarOpen,
         sidebarWidth,
-        setSidebarWidth
+        setSidebarWidth,
     };
 };
 
@@ -136,12 +153,16 @@ const suggestions = [
 //   return data;
 // };
 
+
+
 const Dashboard = () => {
     const { user, isEditing, setIsEditing, editedUser, setEditedUser, saveProfile, resetProfile, sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth } = useStore();
     const [activeTab, setActiveTab] = useState('overview');
     const [isResizing, setIsResizing] = useState(false);
     // heatmapData was removed because the heatmap UI is currently commented out
     const sidebarRef = useRef(null);
+
+
 
     const navigationItems = [
         { id: 'overview', label: 'Overview', icon: Home },

@@ -104,7 +104,11 @@ export default function AuthPage() {
                         setNotification({ message: response.data.msg, type: 'success' });
                         localStorage.setItem('token', response.data.token);
                         console.log('Login successful:', response.data);
-                        setTimeout(() => navigate('/dashboard'), 700);
+                        setTimeout(() =>
+                            navigate("/dashboard", {
+                                state: { userData: response.data },
+                            })
+                            , 700);
                     })
                     .catch(error => {
                         setNotification({

@@ -5,7 +5,7 @@ import { uploadResume } from '../api/setup';
 const ResumeUpload = ({ onComplete }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [uploadedFile, setUploadedFile] = useState(null);
-    const [uploadProgress, setUploadProgress] = useState(0);
+    // const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
@@ -44,13 +44,11 @@ const ResumeUpload = ({ onComplete }) => {
 
     const handleUpload = async (file) => {
         setIsUploading(true);
-        setUploadProgress(0);
+        //setUploadProgress(0);
         setUploadStatus(null);
 
         try {
-            const result = await uploadResume(file, (progress) => {
-                setUploadProgress(progress);
-            });
+            const result = await uploadResume(file);
 
             if (result.success) {
                 setIsUploading(false);
@@ -128,7 +126,7 @@ const ResumeUpload = ({ onComplete }) => {
 
     const handleRemoveFile = () => {
         setUploadedFile(null);
-        setUploadProgress(0);
+        //setUploadProgress(0);
         setUploadStatus(null);
         setErrorMessage('');
         if (fileInputRef.current) {
@@ -240,13 +238,10 @@ const ResumeUpload = ({ onComplete }) => {
                             <h3 className="text-xl font-semibold text-gray-800 mb-4">Uploading...</h3>
 
                             <div className="w-full bg-gray-200 rounded-full h-3 mb-2 overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300 rounded-full"
-                                    style={{ width: `${uploadProgress}%` }}
-                                ></div>
+                                <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-loading-bar"></div>
                             </div>
 
-                            <p className="text-sm font-semibold text-gray-700">{uploadProgress}%</p>
+                            <p className="text-sm font-semibold text-gray-700">Processing your file...</p>
                         </div>
                     )}
 

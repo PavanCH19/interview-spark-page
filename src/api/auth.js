@@ -75,6 +75,7 @@ async function logout() {
         return { success: true, message: 'Logged out successfully' };
     } catch (error) {
         throw new Error('Logout failed: ' + error.message);
+
     }
 }
 

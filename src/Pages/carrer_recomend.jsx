@@ -889,7 +889,7 @@ const AssessmentResultCard = ({ assessmentData, results, summary }) => {
 
     const [showModal, setShowModal] = useState(false);
     const label = assessmentData.label;
-    const skillMatchPercentage = Math.round(assessmentData.feature_summary.skill_match_ratio * 100);
+    const skillMatchPercentage = Math.round((assessmentData.feature_summary?.skill_match_ratio || 0) * 100);
 
     const getStatusConfig = (label) => {
         switch (label) {
@@ -1255,7 +1255,8 @@ const LearningResources = ({ missingSkills, domain }) => {
 };
 
 // Modal Component
-const Modal = ({ show, onClose, children }) => {
+const DecisionModal = ({ show, onClose, children }) => {
+
     useEffect(() => {
         if (show) {
             const previous = document.body.style.overflow;
@@ -1347,7 +1348,7 @@ const CareerDecision = ({ onSwitchPath }) => {
                     </button>
                 </div>
             </div>
-            <Modal show={showModal} onClose={() => setShowModal(false)}>
+            <DecisionModal show={showModal} onClose={() => setShowModal(false)}>
                 <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
                     <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
@@ -1375,7 +1376,7 @@ const CareerDecision = ({ onSwitchPath }) => {
                         </button>
                     </div>
                 </div>
-            </Modal>
+            </DecisionModal>
         </>
     );
 };
@@ -1776,22 +1777,29 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
 
                 {/* Skills Analysis */}
                 <SkillsAnalysis
-                    matchedSkills={assessmentData.matched_skills}
-                    missingSkills={assessmentData.missing_skills}
-                    domain={assessmentData.metadata.domain}
+                    matchedSkills={assessmentData.matched_skills || []}
+                    missingSkills={assessmentData.missing_skills || []}
+                    domain={assessmentData.metadata?.domain || "Unknown"}
                 />
+
 
                 {/* Alternative Career Paths */}
-                <AlternativeDomains
-                    suggestions={assessmentData.alternative_domain_suggestions}
-                    onSelectDomain={(domain) => alert(`Selected: ${domain.domain}`)}
-                />
+                {assessmentData.alternative_domain_suggestions?.length > 0 && (
+                    <AlternativeDomains
+                        suggestions={assessmentData.alternative_domain_suggestions}
+                        onSelectDomain={(domain) => alert(`Selected: ${domain.domain}`)}
+                    />
+                )}
+
 
                 {/* Learning Resources */}
-                <LearningResources
-                    missingSkills={assessmentData.alternative_domain_suggestions[0].key_missing_skills}
-                    domain={assessmentData.alternative_domain_suggestions[0].domain}
-                />
+                {assessmentData.alternative_domain_suggestions?.length > 0 && (
+                    <LearningResources
+                        missingSkills={assessmentData.alternative_domain_suggestions[0]?.key_missing_skills || []}
+                        domain={assessmentData.alternative_domain_suggestions[0]?.domain || assessmentData.metadata.domain}
+                    />
+                )}
+
 
                 {/* Action Buttons */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

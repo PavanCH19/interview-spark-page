@@ -14,6 +14,8 @@ const CareerAssessmentFlow = () => {
     const [processingStep, setProcessingStep] = useState('');
     const [showMockResults, setShowMockresults] = useState(false);
     const [resultData, setResultData] = useState(null);
+    const [hasSubmitted, setHasSubmitted] = useState(false);
+
 
     const collectedDataRef = useRef({});
 
@@ -41,16 +43,25 @@ const CareerAssessmentFlow = () => {
         if (currentStep < steps.length - 1) {
             setCurrentStep(currentStep + 1);
         } else {
-            // For final step, wait a bit to ensure all child data is collected
+            if (hasSubmitted) return;
+            setHasSubmitted(true);
+
             setTimeout(() => {
                 const finalData = collectedDataRef.current;
                 console.log("🚀 Final submission with data:", finalData);
                 submitFinalData(finalData);
             }, 200);
         }
+
     };
 
     const submitFinalData = async (updatedData) => {
+        if (submitFinalData.called) {
+            console.warn("🚨 submitFinalData skipped (already called)");
+            return;
+        }
+        submitFinalData.called = true;
+
         setIsProcessing(true);
 
         try {
@@ -70,19 +81,19 @@ const CareerAssessmentFlow = () => {
             const classify_data = transformCandidateData(updatedData);
             console.log("🧠 Transformed classification data:", classify_data);
 
-            const classifyResponse = await axios.post('http://localhost:3000/api/setup/resume-classify', classify_data, {
+            const classifyResponse = await axios.post('http://localhost:3000/api/setup/setUp_result', classify_data, {
                 headers: {
                     'Authorization': `${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json',
                 }
             });
 
-            console.log("✅ Classify data successfully sent to backend:", classifyResponse.data.data.result);
+            console.log("✅ Classify data successfully sent to backend:", classifyResponse.data.data.data.result);
 
             // Step 3: Navigate with results
             setProcessingStep('Preparing your results...');
             setResultData({
-                classificationResult: classifyResponse.data.data.result,
+                classificationResult: classifyResponse.data.data.data.result,
                 mocktest_result: updatedData.results,
                 mocktest_summary: updatedData.summary
             });
@@ -238,7 +249,10 @@ const CareerAssessmentFlow = () => {
                             <CurrentStepComponent
                                 onComplete={handleStepComplete}
                                 onDataSubmit={handleChildData}
+                                skills={collectedData.skills}
+                                target_domains={collectedData.target_domains}
                             />
+
                         )}
                         {/* Loading Overlay - Compact Version */}
                         {isProcessing && (

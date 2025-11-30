@@ -5,10 +5,12 @@ import {
     Upload, Briefcase, MessageSquare, LineChart, Calendar,
     PlayCircle, Users, Shield, Sparkles
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
     const [currentTestimonial, setCurrentTestimonial] = useState(0);
     const [hoveredFeature, setHoveredFeature] = useState(null);
+    const navigate = useNavigate()
 
     const testimonials = [
         {
@@ -152,7 +154,11 @@ const LandingPage = () => {
                                 Practice tailored mock interviews, get real-time feedback, and track your progress with our intelligent platform.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-slide-up animation-delay-400">
-                                <button className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2">
+                                {/* button to navigate to Register page */}
+                                <button
+                                    onClick={()=>navigate('/auth')} 
+                                    className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                                >
                                     <span>Start Preparing Now</span>
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>

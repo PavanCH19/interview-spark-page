@@ -113,6 +113,7 @@ const CareerAssessmentFlow = () => {
     };
 
     // Keep handleChildData for real-time data updates
+    
     const handleChildData = (data) => {
         const merged = { ...collectedDataRef.current, ...data };
         collectedDataRef.current = merged;
@@ -125,11 +126,12 @@ const CareerAssessmentFlow = () => {
     const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
     const transformCandidateData = (collectedData) => {
+        // here collectedData is updatedData passed from the submitFinal data
         if (!collectedData) return null;
 
         // Extract skills (capitalize first letter for consistency)
         const skills = collectedData.skills
-            ? collectedData.skills.map(skill => skill.charAt(0).toUpperCase() + skill.slice(1))
+            ? collectedData.skills.map(skill => skill.charAt(0).toUpperCase() + skill.slice(1)) 
             : [];
 
         // Extract project titles

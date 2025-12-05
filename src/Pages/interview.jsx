@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock, Brain, Target, ChevronRight, Lightbulb, RotateCcw, CheckCircle, XCircle, ChevronLeft, Mic, Square, Send } from 'lucide-react';
-
-
 import { Download, AlertCircle } from 'lucide-react';
 
 const Waveform = ({ stream, isRecording }) => {

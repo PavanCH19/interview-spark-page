@@ -104,11 +104,21 @@ export default function AuthPage() {
                         setNotification({ message: response.data.msg, type: 'success' });
                         localStorage.setItem('token', response.data.token);
                         console.log('Login successful:', response.data);
-                        setTimeout(() =>
+                        if(response.data.firstTimeLogin){
+                            setTimeout(() =>
+                            navigate("/setup", {
+                                state: { userData: response.data },
+                            })
+                            , 700);
+                        }
+                        else{
+                            setTimeout(() =>
                             navigate("/dashboard", {
                                 state: { userData: response.data },
                             })
                             , 700);
+                        }
+                        
                     })
                     .catch(error => {
                         setNotification({
@@ -131,7 +141,8 @@ export default function AuthPage() {
                         setNotification({ message: response.data.msg, type: 'success' });
                         localStorage.removeItem('token');
                         console.log('Registration successful:', registerForm);
-                        setTimeout(() => navigate('/setup'), 700);
+                        setTimeout(() => navigate('/auth'), 700);
+                        setActiveTab('login');
                     })
                     .catch(error => {
                         setNotification({

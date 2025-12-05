@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { User, BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Zap, ChevronRight, Play, RotateCcw, Download, Shield, Edit2, Save, X, CheckCircle, AlertCircle, Trophy, Flame, Star, Clock, MessageSquare, BarChart3, Brain, Menu, Home, LogOut, HelpCircle, GripVertical } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 
 // Zustand-like store using React hooks
@@ -55,6 +56,7 @@ const useStore = () => {
 
     return {
         user,
+        setUser,
         isEditing,
         setIsEditing,
         editedUser,
@@ -89,6 +91,8 @@ const careerRecommendations = [
     { title: 'Senior SWE', fit: 92, description: 'Current trajectory path', action: 'Stay' },
     { title: 'Solutions Architect', fit: 73, description: 'Architecture focus', action: 'Explore' }
 ];
+
+// action is enum : ["switch", "stay", "explore"]
 
 const ongoingSessions = [
     { id: 1, domain: 'System Design', company: 'Google', progress: 60, started: '2 days ago' },
@@ -156,11 +160,18 @@ const suggestions = [
 
 
 const Dashboard = () => {
-    const { user, isEditing, setIsEditing, editedUser, setEditedUser, saveProfile, resetProfile, sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth } = useStore();
+    const { user, setUser, isEditing, setIsEditing, editedUser, setEditedUser, saveProfile, resetProfile, sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth } = useStore();
     const [activeTab, setActiveTab] = useState('overview');
     const [isResizing, setIsResizing] = useState(false);
     // heatmapData was removed because the heatmap UI is currently commented out
     const sidebarRef = useRef(null);
+    const navigate = useNavigate();
+    const api = axios.create({
+        headers : {
+            "Authorization": `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type" : "application/json"
+        }
+    })
 
 
 
@@ -199,6 +210,59 @@ const Dashboard = () => {
             document.body.style.userSelect = '';
         };
     }, [isResizing, setSidebarWidth]);
+
+    const handleLogout = ()=>{
+        if(!window.confirm("Are you sure to Logout?")) return
+        localStorage.removeItem('token')
+        console.log("logged out successfully")
+        navigate('/auth');
+    }
+
+//  name: userProfile?.name || "",
+//         email: userData?.user?.email || "",
+//         title: userProfile?.title || "Senior Software Engineer",
+//         experience: userProfile?.experience || "5 years",
+//         location: userProfile?.location || "",
+//         skills: userProfile?.skills || [
+//             "JavaScript",
+//             "React",
+//             "Node.js",
+//             "Python",
+//             "SQL",
+//             "System Design",
+//         ],
+//         education: userEducation[0]?.college || "BS Computer Science - Stanford University",
+//         careerPath: userProfile?.careerPath || "Software Engineering",
+//         suggestedPath: userProfile?.suggestedPath || "Technical Lead",
+//         level: userProfile?.level || 12,
+//         xp: userProfile?.xp || 2840,
+//         xpToNext: userProfile?.xpToNext || 3000,
+//         streak: userProfile?.streak || 7,
+//         badges: userProfile?.badges 
+
+    useEffect(()=>{
+        const userDetails = async ()=>{
+            let response = await api.get("http://localhost:3000/api/auth/getUserDetails")
+            if(response.status === 200){
+                // console.log("========================")
+                // console.log("below is the fetched data")
+                // console.log(response.data.data)
+                let data = response.data.data
+                // console.log("profile ; ", data.profile)
+                setUser({
+                    ...user,
+                    name : data.profile.name ,
+                    email : data.profile.email,
+                    location : data.profile.location,
+                    skills : data.skills,
+                })
+            }
+            else {
+                console.error("Unable to fetch data")
+            }
+        }
+        userDetails()
+    }, [])
 
     const StatCard = ({ icon: Icon, label, value, trend, gradient }) => (
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
@@ -313,6 +377,7 @@ const Dashboard = () => {
                             })}
                         </div>
 
+                        {/* settings help and logout */}
                         <div className="mt-8 pt-6 border-t border-gray-200 space-y-1">
                             <button className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl font-medium transition-colors">
                                 <Settings className="w-5 h-5" />
@@ -322,7 +387,11 @@ const Dashboard = () => {
                                 <HelpCircle className="w-5 h-5" />
                                 <span>Help</span>
                             </button>
-                            <button className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors">
+
+                            {/* Logout button */}
+                            <button className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors"
+                                onClick={handleLogout}
+                            >
                                 <LogOut className="w-5 h-5" />
                                 <span>Logout</span>
                             </button>
@@ -334,7 +403,7 @@ const Dashboard = () => {
                         onMouseDown={() => setIsResizing(true)}
                         className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-indigo-400 bg-gray-300 transition-colors group"
                     >
-                        <div className="absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-1/2 right-0 transform translate-x-1/2 translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <GripVertical className="w-4 h-4 text-indigo-600" />
                         </div>
                     </div>
@@ -628,7 +697,7 @@ const Dashboard = () => {
                                 <h2 className="text-3xl font-bold mb-3">Ready for Your Next Challenge?</h2>
                                 <p className="mb-8 text-indigo-100 text-lg">Start an adaptive AI-powered interview session tailored to your goals.</p>
                                 <div className="flex flex-wrap gap-4">
-                                    <select className="px-5 py-3 bg-white text-gray-900 rounded-xl font-semibold shadow-lg focus:ring-2 focus:ring-white focus:outline-none">
+                                    {/* <select className="px-5 py-3 bg-white text-gray-900 rounded-xl font-semibold shadow-lg focus:ring-2 focus:ring-white focus:outline-none">
                                         <option>Select Domain</option>
                                         <option>Frontend Development</option>
                                         <option>Backend Engineering</option>
@@ -643,8 +712,12 @@ const Dashboard = () => {
                                         <option>Meta</option>
                                         <option>Microsoft</option>
                                         <option>Generic</option>
-                                    </select>
-                                    <button className="px-8 py-3 bg-white text-indigo-600 hover:bg-gray-100 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg hover:shadow-xl">
+                                    </select> */}
+                                    <button className="px-8 py-3 bg-white text-indigo-600 hover:bg-gray-100 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg hover:shadow-xl"
+                                        onClick={()=>{
+                                            navigate('/interview')
+                                        }}
+                                    >
                                         <Play className="w-5 h-5" />
                                         <span>Start Interview</span>
                                     </button>

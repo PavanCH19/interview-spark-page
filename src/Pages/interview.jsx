@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock, Brain, Target, ChevronRight, Lightbulb, RotateCcw, CheckCircle, XCircle, ChevronLeft, Mic, Square, Send } from 'lucide-react';
 import { Download, AlertCircle } from 'lucide-react';
+import axios from 'axios';
+import RecentSession from '../components/sessions/recent_sessions';
+
 
 const Waveform = ({ stream, isRecording }) => {
     const canvasRef = useRef(null);
@@ -71,6 +74,7 @@ const Waveform = ({ stream, isRecording }) => {
     return <canvas ref={canvasRef} className="w-full h-24 rounded-lg" />;
 };
 
+//onRecordingComplete is handleAnswerChange | changes the form data object
 const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
     const [status, setStatus] = useState(answer ? 'stopped' : 'ready'); // ready, recording, stopped
     const [audioURL, setAudioURL] = useState(answer || null);
@@ -81,6 +85,7 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
     const chunksRef = useRef([]);
     const timerRef = useRef(null);
     const streamRef = useRef(null);
+    const wavFileRef = useRef(null); // Store the actual WAV File object
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -88,31 +93,117 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
         return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     };
 
+    function writeString(view, offset, str) {
+        for (let i = 0; i < str.length; i++) {
+            view.setUint8(offset + i, str.charCodeAt(i));
+        }
+    }
+
+    function audioBufferToWav(audioBuffer) {
+        const numChannels = audioBuffer.numberOfChannels;
+        const sampleRate = audioBuffer.sampleRate;
+        const samples = audioBuffer.length;
+
+        const buffer = new ArrayBuffer(44 + samples * 2 * numChannels);
+        const view = new DataView(buffer);
+
+        writeString(view, 0, "RIFF");
+        view.setUint32(4, 36 + samples * 2 * numChannels, true);
+        writeString(view, 8, "WAVE");
+
+        writeString(view, 12, "fmt ");
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * numChannels * 2, true);
+        view.setUint16(32, numChannels * 2, true);
+        view.setUint16(34, 16, true);
+
+        writeString(view, 36, "data");
+        view.setUint32(40, samples * 2 * numChannels, true);
+
+        let offset = 44;
+        for (let c = 0; c < numChannels; c++) {
+            const channelData = audioBuffer.getChannelData(c);
+            for (let i = 0; i < samples; i++) {
+                const sample = Math.max(-1, Math.min(1, channelData[i]));
+                view.setInt16(offset, sample * 0x7FFF, true);
+                offset += 2;
+            }
+        }
+        return buffer;
+    }
+
+    async function convertBlobToWav(blob) {
+        const arrayBuffer = await blob.arrayBuffer();
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        const wavBuffer = audioBufferToWav(audioBuffer);
+
+        return new Blob([wavBuffer], { type: "audio/wav" });
+    }
+
     const startRecording = async () => {
         try {
             setError('');
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             streamRef.current = stream;
 
-            const mediaRecorder = new MediaRecorder(stream, {
-                mimeType: 'audio/webm'
-            });
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
             mediaRecorderRef.current = mediaRecorder;
+
             chunksRef.current = [];
 
             mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    chunksRef.current.push(e.data);
-                }
+                if (e.data.size > 0) chunksRef.current.push(e.data);
             };
 
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-                const url = URL.createObjectURL(blob);
-                setAudioURL(url);
-                onRecordingComplete?.(url, blob);
+            mediaRecorder.onstop = async () => {
+                const webmBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
 
-                // Stop all tracks
+                // Convert WebM → WAV
+                const wavBlob = await convertBlobToWav(webmBlob);
+
+                // Create File in frontend memory
+                const timestamp = Date.now();
+                const wavFile = new File(
+                    [wavBlob],
+                    `voice-recording-${timestamp}.wav`,
+                    { type: 'audio/wav' }
+                );
+
+                console.log("WAV created:", wavFile);
+
+                // Store in frontend memory (ref)
+                wavFileRef.current = wavFile;
+
+                // Preview audio
+                const wavUrl = URL.createObjectURL(wavBlob);
+                setAudioURL(wavUrl);
+
+                // Notify parent
+                onRecordingComplete?.(wavFile);
+
+                // // ✅ Send file to backend (NO SAVING)
+                // try {
+                //     const formData = new FormData();
+                //     formData.append("audio", wavFile);
+
+                //     await fetch("http://localhost:5000/process-audio", {
+                //         method: "POST",
+                //         body: formData
+                //     });
+
+                //     console.log("File sent to backend for processing (not stored).");
+
+                // } catch (err) {
+                //     console.error("Backend send failed:", err);
+                // }
+
+                // Stop mic
                 if (streamRef.current) {
                     streamRef.current.getTracks().forEach(track => track.stop());
                     streamRef.current = null;
@@ -123,11 +214,9 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
             setStatus('recording');
             setRecordingTime(0);
 
-            // Start timer
             timerRef.current = setInterval(() => {
                 setRecordingTime(prev => {
                     const newTime = prev + 1;
-                    // Auto-stop at max duration
                     if (newTime >= maxDuration) {
                         stopRecording();
                         return maxDuration;
@@ -135,11 +224,13 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
                     return newTime;
                 });
             }, 1000);
+
         } catch (err) {
             console.error('Error accessing microphone:', err);
             setError('Unable to access microphone. Please check your browser permissions.');
         }
     };
+
 
     const stopRecording = () => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -157,20 +248,50 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
             URL.revokeObjectURL(audioURL);
         }
         setAudioURL(null);
+        wavFileRef.current = null;
         setStatus('ready');
         setRecordingTime(0);
         setError('');
-        onRecordingComplete?.(null, null);
+        onRecordingComplete?.(null);
     };
 
     const downloadRecording = () => {
-        if (audioURL) {
+        if (wavFileRef.current) {
             const a = document.createElement('a');
-            a.href = audioURL;
-            a.download = `voice-recording-${Date.now()}.webm`;
+            a.href = URL.createObjectURL(wavFileRef.current);
+            a.download = wavFileRef.current.name;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        }
+    };
+
+    // Function to send to backend (example)
+    const sendToBackend = async () => {
+        if (!wavFileRef.current) {
+            console.error('No WAV file available');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('audio', wavFileRef.current); // This sends the actual .wav file
+        formData.append('duration', recordingTime);
+        formData.append('timestamp', Date.now());
+
+        try {
+            const response = await fetch('/api/upload-audio', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Upload successful:', result);
+            } else {
+                console.error('Upload failed:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error uploading file:', error);
         }
     };
 
@@ -249,7 +370,9 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
                     <div className="mb-4 p-4 bg-white rounded-xl border border-green-200">
                         <div className="flex items-center gap-2 mb-3">
                             <CheckCircle className="text-green-500" size={18} />
-                            <span className="font-medium text-gray-700 text-sm">Recording Saved</span>
+                            <span className="font-medium text-gray-700 text-sm">
+                                Recording Saved ({wavFileRef.current?.name})
+                            </span>
                         </div>
                         <audio
                             src={audioURL}
@@ -323,128 +446,14 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
 
             {/* Help Text */}
             <p className="text-xs text-gray-500 text-center">
-                Requires microphone access • Supported on Chrome, Firefox, Safari, Edge
+                Requires microphone access • WAV format • Supported on Chrome, Firefox, Safari, Edge
                 {maxDuration && ` • Max duration: ${formatTime(maxDuration)}`}
             </p>
         </div>
     );
 };
-// // Voice Recorder Component
-// const VoiceRecorder = ({ onRecordingComplete, answer }) => {
-//     const [isRecording, setIsRecording] = useState(false);
-//     const [audioURL, setAudioURL] = useState(answer || null);
-//     const [recordingTime, setRecordingTime] = useState(0);
-//     const mediaRecorderRef = useRef(null);
-//     const chunksRef = useRef([]);
-//     const timerRef = useRef(null);
 
-//     const startRecording = async () => {
-//         try {
-//             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-//             mediaRecorderRef.current = new MediaRecorder(stream);
-//             chunksRef.current = [];
-
-//             mediaRecorderRef.current.ondataavailable = (e) => {
-//                 if (e.data.size > 0) {
-//                     chunksRef.current.push(e.data);
-//                 }
-//             };
-
-//             mediaRecorderRef.current.onstop = () => {
-//                 const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-//                 const url = URL.createObjectURL(blob);
-//                 setAudioURL(url);
-//                 onRecordingComplete(url);
-//                 stream.getTracks().forEach(track => track.stop());
-//             };
-
-//             mediaRecorderRef.current.start();
-//             setIsRecording(true);
-//             setRecordingTime(0);
-
-//             timerRef.current = setInterval(() => {
-//                 setRecordingTime(prev => prev + 1);
-//             }, 1000);
-//         } catch (error) {
-//             console.error('Error accessing microphone:', error);
-//             alert('Unable to access microphone. Please check permissions.');
-//         }
-//     };
-
-//     const stopRecording = () => {
-//         if (mediaRecorderRef.current && isRecording) {
-//             mediaRecorderRef.current.stop();
-//             setIsRecording(false);
-//             if (timerRef.current) {
-//                 clearInterval(timerRef.current);
-//             }
-//         }
-//     };
-
-//     const formatTime = (seconds) => {
-//         const mins = Math.floor(seconds / 60);
-//         const secs = seconds % 60;
-//         return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-//     };
-
-//     useEffect(() => {
-//         return () => {
-//             if (timerRef.current) {
-//                 clearInterval(timerRef.current);
-//             }
-//         };
-//     }, []);
-
-//     return (
-//         <div className="space-y-3">
-//             <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-200">
-//                 <div className="flex items-center justify-between mb-3">
-//                     <h4 className="font-semibold text-gray-700 text-sm">Voice Answer</h4>
-//                     {isRecording && (
-//                         <div className="flex items-center gap-2">
-//                             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-//                             <span className="text-sm font-mono text-gray-700">{formatTime(recordingTime)}</span>
-//                         </div>
-//                     )}
-//                 </div>
-
-//                 <div className="flex gap-3 items-center">
-//                     {!isRecording ? (
-//                         <button
-//                             onClick={startRecording}
-//                             className="flex items-center gap-2 px-5 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all shadow hover:shadow-md active:scale-95"
-//                         >
-//                             <Mic size={18} />
-//                             Start Recording
-//                         </button>
-//                     ) : (
-//                         <button
-//                             onClick={stopRecording}
-//                             className="flex items-center gap-2 px-5 py-2.5 bg-gray-700 text-white rounded-lg font-medium hover:bg-gray-800 transition-all shadow hover:shadow-md active:scale-95"
-//                         >
-//                             <Square size={18} />
-//                             Stop Recording
-//                         </button>
-//                     )}
-//                 </div>
-
-//                 {audioURL && !isRecording && (
-//                     <div className="mt-3 p-3 bg-white rounded-lg border border-green-200">
-//                         <div className="flex items-center gap-2 mb-2">
-//                             <CheckCircle className="text-green-500" size={18} />
-//                             <span className="font-medium text-gray-700 text-sm">Recording Complete</span>
-//                         </div>
-//                         <audio controls src={audioURL} className="w-full h-8">
-//                             Your browser does not support the audio element.
-//                         </audio>
-//                     </div>
-//                 )}
-//             </div>
-//         </div>
-//     );
-// };
-
-// Answer Input Component
+// Answer Input Component | onChange is handleAnswerChange
 const AnswerInput = ({ question, answer, onChange }) => {
     if (question.question_type === 'subjective') {
         const maxChars = question.max_chars || 600;
@@ -453,7 +462,7 @@ const AnswerInput = ({ question, answer, onChange }) => {
             <div className="space-y-2">
                 <textarea
                     value={answer || ''}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(e) => onChange(e.target.value)} // calling handleAnswerChange | 
                     placeholder="Type your answer here..."
                     className="w-full h-36 p-4 border border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none text-gray-700"
                     maxLength={maxChars}
@@ -514,7 +523,7 @@ const AnswerInput = ({ question, answer, onChange }) => {
     }
 
     if (question.question_type === 'voice-based' || question.question_type === 'voice') {
-        return <VoiceRecorder answer={answer} onRecordingComplete={onChange} />;
+        return <VoiceRecorder answer={answer} onRecordingComplete={onChange} />; // here onChange stands for HandleAnswerChange
     }
 
     return (
@@ -524,7 +533,7 @@ const AnswerInput = ({ question, answer, onChange }) => {
     );
 };
 
-// Question Card Component
+// Question Card Component | onChange is handleAnswerChange
 const QuestionCard = ({ question, answer, onChange, showHint, currentIndex, totalQuestions }) => {
     const getDifficultyColor = (label) => {
         switch (label) {
@@ -726,7 +735,7 @@ const SuccessModal = ({ onClose, sessionData }) => {
     );
 };
 
-const InterviewSessionUI = () => {
+const InterviewSessionUI = ({ domain }) => {
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState({});
@@ -746,7 +755,7 @@ const InterviewSessionUI = () => {
             try {
                 console.log("📡 Fetching interview questions...");
                 const response = await fetch(
-                    "http://localhost:3000/api/interview/ai_ml",
+                    `http://localhost:3000/api/interview/${domain}`,
                     {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -754,7 +763,7 @@ const InterviewSessionUI = () => {
                         }
                     }
                 );
-
+                console.log(response)
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -769,6 +778,7 @@ const InterviewSessionUI = () => {
         };
 
         fetchQuestions();
+        console.log("answers : ", answers);
     }, []);
 
     // Timer
@@ -801,6 +811,7 @@ const InterviewSessionUI = () => {
     const totalQuestions = questions.length;
 
     const handleAnswerChange = (value) => {
+        console.log(value)
         const questionId = currentQuestion._id;
         setAnswers({ ...answers, [questionId]: value });
     };
@@ -819,8 +830,9 @@ const InterviewSessionUI = () => {
         }
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const sessionData = {
+            domain,
             totalQuestions,
             answeredCount: Object.keys(answers).length,
             answers,
@@ -830,8 +842,10 @@ const InterviewSessionUI = () => {
         };
 
         console.log('=== INTERVIEW SESSION DATA ===');
-        console.log(JSON.stringify(sessionData, null, 2));
-        console.log('=============================');
+        // console.log(JSON.stringify(sessionData, null, 2));        onRecordingComplete?.(wavFile); // wavFile is a File object
+        console.log("Session data✨",sessionData)
+        const response = await axios.post("http://localhost:3000/api/interview/submit-test", sessionData)
+        console.log(response)
 
         setShowSuccessModal(true);
     };

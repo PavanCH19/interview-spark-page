@@ -1,7 +1,58 @@
 import { BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { User, BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Zap, ChevronRight, Play, RotateCcw, Download, Shield, Edit2, Save, X, CheckCircle, AlertCircle, Trophy, Flame, Star, Clock, MessageSquare, BarChart3, Brain, Menu, Home, LogOut, HelpCircle, GripVertical } from 'lucide-react';
 
-const Overview = () => {
+const Overview = ({ user, isEditing }) => {
+
+    // Mock data (same as before)
+    const assessmentData = {
+        overallScore: 78,
+        weakSkills: ['System Design', 'SQL Optimization', 'Docker'],
+        strongSkills: ['React', 'JavaScript', 'Communication']
+    };
+
+    const skillComparison = [
+        { skill: 'JavaScript', user: 85, required: 80 },
+        { skill: 'React', user: 90, required: 85 },
+        { skill: 'Node.js', user: 75, required: 80 },
+        { skill: 'SQL', user: 65, required: 85 },
+        { skill: 'System Design', user: 60, required: 90 },
+        { skill: 'Algorithms', user: 70, required: 85 }
+    ];
+
+    const careerRecommendations = [
+        { title: 'Technical Lead', fit: 87, description: 'Leadership + Technical Excellence', action: 'Switch' },
+        { title: 'Senior SWE', fit: 92, description: 'Current trajectory path', action: 'Stay' },
+        { title: 'Solutions Architect', fit: 73, description: 'Architecture focus', action: 'Explore' }
+    ];
+
+    const suggestions = [
+        'Focus on SQL – 2 weak answers last week',
+        'Practice system design for FAANG interviews',
+        'Your behavioral scores are excellent – maintain momentum'
+    ];
+
+    const StatCard = ({ icon: Icon, label, value, trend, gradient }) => (
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div className="flex items-start justify-between">
+                <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-500 mb-2">{label}</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
+                    {trend && (
+                        <p className="text-sm font-medium text-emerald-600 flex items-center">
+                            <TrendingUp className="w-4 h-4 mr-1" />
+                            {trend}
+                        </p>
+                    )}
+                </div>
+                {Icon && (
+                    <div className={`p-4 rounded-xl ${gradient}`}>
+                        <Icon className="w-6 h-6 text-white" />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
     return (
         <>
             <div className="space-y-6">

@@ -104,7 +104,7 @@ export default function AuthPage() {
                         setNotification({ message: response.data.msg, type: 'success' });
                         localStorage.setItem('token', response.data.token);
                         console.log('Login successful:', response.data);
-                        if(response.data.firstTimeLogin){
+                        if(!response.data.setupCompleted){
                             setTimeout(() =>
                             navigate("/setup", {
                                 state: { userData: response.data },

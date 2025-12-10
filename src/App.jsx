@@ -159,7 +159,7 @@ function App() {
           path="/interview"
           element={
             <ProtectedRoute>
-              <InterviewSessionUI />
+              <InterviewSessionUI domain={"ai_ml"} />
             </ProtectedRoute>
           }
         />

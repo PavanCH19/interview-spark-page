@@ -2,6 +2,19 @@ import { BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngl
 import { User, BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Zap, ChevronRight, Play, RotateCcw, Download, Shield, Edit2, Save, X, CheckCircle, AlertCircle, Trophy, Flame, Star, Clock, MessageSquare, BarChart3, Brain, Menu, Home, LogOut, HelpCircle, GripVertical } from 'lucide-react';
 
 const DashInterviews = () => {
+    const preparationPaths = [
+        { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
+        { id: 2, domain: 'Web Development', company: 'Amazon', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "web_development", started: "12-6-2025" },
+        { id: 3, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
+    ];
+
+    const recentSessions = [
+        { id: 1, date: '2025-10-03', domain: 'React Development', score: 85, type: 'Technical', status: 'Pass' },
+        { id: 2, date: '2025-10-01', domain: 'System Design', score: 72, type: 'Design', status: 'Pass' },
+        { id: 3, date: '2025-09-28', domain: 'Behavioral', score: 88, type: 'Behavioral', status: 'Pass' },
+        { id: 4, date: '2025-09-25', domain: 'SQL Queries', score: 65, type: 'Technical', status: 'Review' },
+        { id: 5, date: '2025-09-22', domain: 'JavaScript Algorithms', score: 90, type: 'Technical', status: 'Pass' }
+    ];
     return (
         <>
             <div className="space-y-6">
@@ -11,21 +24,21 @@ const DashInterviews = () => {
                     <p className="mb-8 text-indigo-100 text-lg">Start an adaptive AI-powered interview session tailored to your goals.</p>
                     <div className="flex flex-wrap gap-4">
                         {/* <select className="px-5 py-3 bg-white text-gray-900 rounded-xl font-semibold shadow-lg focus:ring-2 focus:ring-white focus:outline-none">
-                                        <option>Select Domain</option>
-                                        <option>Frontend Development</option>
-                                        <option>Backend Engineering</option>
-                                        <option>System Design</option>
-                                        <option>Behavioral</option>
-                                        <option>Data Structures & Algorithms</option>
-                                    </select>
-                                    <select className="px-5 py-3 bg-white text-gray-900 rounded-xl font-semibold shadow-lg focus:ring-2 focus:ring-white focus:outline-none">
-                                        <option>Select Company</option>
-                                        <option>Google</option>
-                                        <option>Amazon</option>
-                                        <option>Meta</option>
-                                        <option>Microsoft</option>
-                                        <option>Generic</option>
-                                    </select> */}
+                                                    <option>Select Domain</option>
+                                                    <option>Frontend Development</option>
+                                                    <option>Backend Engineering</option>
+                                                    <option>System Design</option>
+                                                    <option>Behavioral</option>
+                                                    <option>Data Structures & Algorithms</option>
+                                                </select>
+                                                <select className="px-5 py-3 bg-white text-gray-900 rounded-xl font-semibold shadow-lg focus:ring-2 focus:ring-white focus:outline-none">
+                                                    <option>Select Company</option>
+                                                    <option>Google</option>
+                                                    <option>Amazon</option>
+                                                    <option>Meta</option>
+                                                    <option>Microsoft</option>
+                                                    <option>Generic</option>
+                                                </select> */}
                         <button className="px-8 py-3 bg-white text-indigo-600 hover:bg-gray-100 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg hover:shadow-xl"
                             onClick={() => {
                                 navigate('/interview')
@@ -38,33 +51,58 @@ const DashInterviews = () => {
                 </div>
 
                 {/* Ongoing Sessions */}
-                {ongoingSessions.length > 0 && (
+                {preparationPaths.length > 0 && (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
                         <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center">
                             <div className="p-2 bg-amber-100 rounded-lg mr-3">
                                 <Clock className="w-5 h-5 text-amber-600" />
                             </div>
-                            Ongoing Sessions
+                            Learning Paths
                         </h3>
-                        <div className="space-y-4">
-                            {ongoingSessions.map(session => (
-                                <div key={session.id} className="border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                    <div className="flex-1">
-                                        <h4 className="font-bold text-gray-900 text-lg mb-1">{session.domain}</h4>
-                                        <p className="text-sm text-gray-600 font-medium">{session.company} · Started {session.started}</p>
-                                        <div className="mt-4">
-                                            <div className="flex items-center justify-between text-sm mb-2">
-                                                <span className="text-gray-600 font-medium">Progress</span>
-                                                <span className="font-bold text-amber-700">{session.progress}%</span>
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
+
+                            {preparationPaths.map((session) => (
+                                <div
+                                    key={session.id}
+                                    className="h-full rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between"
+                                >
+                                    {/* Content */}
+                                    <div className="space-y-3">
+                                        <div>
+                                            <h4 className="text-base font-bold text-gray-900 truncate">
+                                                {session.domain}
+                                            </h4>
+                                            <p className="text-xs text-gray-600 font-medium truncate">
+                                                {session.company} • Started {session.started}
+                                            </p>
+                                        </div>
+
+                                        {/* Session Info */}
+                                        <div className="bg-white/60 p-3 rounded-xl border border-amber-100 space-y-1.5">
+                                            <p className="text-xs font-semibold text-gray-800">
+                                                Last Session
+                                            </p>
+
+                                            <div className="flex justify-between text-xs text-gray-700">
+                                                <span>Score</span>
+                                                <span className="font-medium">{session.lastSessionScore}</span>
                                             </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
-                                                <div className="bg-gradient-to-r from-amber-500 to-orange-600 h-3 rounded-full transition-all duration-500 shadow-sm" style={{ width: `${session.progress}%` }}></div>
+
+                                            <div className="flex justify-between text-xs text-gray-700">
+                                                <span>Date</span>
+                                                <span className="font-medium">{session.lastSession}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <button className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg">
-                                        <Play className="w-5 h-5" />
-                                        <span>Resume</span>
+
+                                    {/* Button */}
+                                    <button className="mt-4 w-full py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow hover:shadow-lg hover:scale-[1.03] transition"
+                                        onClick={()=>{
+                                            navigate("/interview")
+                                        }}
+                                    >
+                                        <Play className="w-4 h-4" />
+                                        Resume
                                     </button>
                                 </div>
                             ))}
@@ -129,4 +167,4 @@ const DashInterviews = () => {
     )
 }
 
-export default DashInterviews
+export default DashInterviews;

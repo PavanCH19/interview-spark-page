@@ -72,43 +72,6 @@ const useStore = () => {
     };
 };
 
-// // Mock data (same as before)
-// const assessmentData = {
-//     overallScore: 78,
-//     weakSkills: ['System Design', 'SQL Optimization', 'Docker'],
-//     strongSkills: ['React', 'JavaScript', 'Communication']
-// };
-
-// const skillComparison = [
-//     { skill: 'JavaScript', user: 85, required: 80 },
-//     { skill: 'React', user: 90, required: 85 },
-//     { skill: 'Node.js', user: 75, required: 80 },
-//     { skill: 'SQL', user: 65, required: 85 },
-//     { skill: 'System Design', user: 60, required: 90 },
-//     { skill: 'Algorithms', user: 70, required: 85 }
-// ];
-
-// const careerRecommendations = [
-//     { title: 'Technical Lead', fit: 87, description: 'Leadership + Technical Excellence', action: 'Switch' },
-//     { title: 'Senior SWE', fit: 92, description: 'Current trajectory path', action: 'Stay' },
-//     { title: 'Solutions Architect', fit: 73, description: 'Architecture focus', action: 'Explore' }
-// ];
-
-// // action is enum : ["switch", "stay", "explore"]
-
-// const preparationPaths = [
-//     { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
-//     { id: 2, domain: 'Web Development', company: 'Amazon', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "web_development", started: "12-6-2025" },
-//     { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
-// ];
-
-// const recentSessions = [
-//     { id: 1, date: '2025-10-03', domain: 'React Development', score: 85, type: 'Technical', status: 'Pass' },
-//     { id: 2, date: '2025-10-01', domain: 'System Design', score: 72, type: 'Design', status: 'Pass' },
-//     { id: 3, date: '2025-09-28', domain: 'Behavioral', score: 88, type: 'Behavioral', status: 'Pass' },
-//     { id: 4, date: '2025-09-25', domain: 'SQL Queries', score: 65, type: 'Technical', status: 'Review' },
-//     { id: 5, date: '2025-09-22', domain: 'JavaScript Algorithms', score: 90, type: 'Technical', status: 'Pass' }
-// ];
 
 const performanceMetrics = {
     contentScores: { grammar: 82, relevance: 88, coherence: 85 },
@@ -252,13 +215,13 @@ const Dashboard = () => {
                 // console.log("below is the fetched data")
                 // console.log(response.data.data)
                 let data = response.data.data
-                // console.log("profile ; ", data.profile)
+                console.log("profile ; ", data.profile)
                 setUser(prev => ({
                     ...prev,
-                    name: data.profile?.name || prev.name || "",
-                    email: data.profile?.email || prev.email || "",
-                    location: data.profile?.location || prev.location || "",
-                    skills: data.skills || prev.skills || [],
+                    name: data.profile?.name,
+                    email: data.email,
+                    location: data.profile?.location,
+                    skills: data.skills,
                 }))
             }
             else {
@@ -266,6 +229,7 @@ const Dashboard = () => {
             }
         }
         userDetails()
+        // console.log('⚠️')
     }, [])
 
     const StatCard = ({ icon: Icon, label, value, trend, gradient }) => (

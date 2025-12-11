@@ -60,7 +60,7 @@ const Overview = ({ user, isEditing }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard icon={Trophy} label="Level" value={user.level} gradient="bg-gradient-to-br from-indigo-600 to-indigo-700" />
                     <StatCard icon={Zap} label="XP Points" value={`${user.xp}/${user.xpToNext}`} gradient="bg-gradient-to-br from-amber-500 to-orange-600" />
-                    <StatCard icon={Flame} label="Day Streak" value={user.streak} trend="+2 this week" gradient="bg-gradient-to-br from-red-500 to-orange-600" />
+                    <StatCard icon={Flame} label="Daily Streak" value={user.streak} trend="+2 this week" gradient="bg-gradient-to-br from-red-500 to-orange-600" />
                     <StatCard icon={Star} label="Badges" value={user.badges.length} gradient="bg-gradient-to-br from-purple-600 to-pink-600" />
                 </div>
 

@@ -11,6 +11,7 @@ import CareerRecommendationDashboard from './Pages/carrer_recomend';
 import ResumeBuilderDashboard from './Pages/resume_build';
 import InterviewSessionUI from './Pages/interview';
 import AudioVideoCaptureUI from './Pages/audio_capture';
+import TestResultsDashboard from './Pages/interview_result';
 import { Notification } from './components/Notifications';
 
 // Fixed Protected Route Component
@@ -160,6 +161,15 @@ function App() {
           element={
             <ProtectedRoute>
               <InterviewSessionUI domain={"ai_ml"} />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/interview-results"
+          element={
+            <ProtectedRoute>
+              <TestResultsDashboard />
             </ProtectedRoute>
           }
         />

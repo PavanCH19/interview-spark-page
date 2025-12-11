@@ -72,43 +72,43 @@ const useStore = () => {
     };
 };
 
-// Mock data (same as before)
-const assessmentData = {
-    overallScore: 78,
-    weakSkills: ['System Design', 'SQL Optimization', 'Docker'],
-    strongSkills: ['React', 'JavaScript', 'Communication']
-};
+// // Mock data (same as before)
+// const assessmentData = {
+//     overallScore: 78,
+//     weakSkills: ['System Design', 'SQL Optimization', 'Docker'],
+//     strongSkills: ['React', 'JavaScript', 'Communication']
+// };
 
-const skillComparison = [
-    { skill: 'JavaScript', user: 85, required: 80 },
-    { skill: 'React', user: 90, required: 85 },
-    { skill: 'Node.js', user: 75, required: 80 },
-    { skill: 'SQL', user: 65, required: 85 },
-    { skill: 'System Design', user: 60, required: 90 },
-    { skill: 'Algorithms', user: 70, required: 85 }
-];
+// const skillComparison = [
+//     { skill: 'JavaScript', user: 85, required: 80 },
+//     { skill: 'React', user: 90, required: 85 },
+//     { skill: 'Node.js', user: 75, required: 80 },
+//     { skill: 'SQL', user: 65, required: 85 },
+//     { skill: 'System Design', user: 60, required: 90 },
+//     { skill: 'Algorithms', user: 70, required: 85 }
+// ];
 
-const careerRecommendations = [
-    { title: 'Technical Lead', fit: 87, description: 'Leadership + Technical Excellence', action: 'Switch' },
-    { title: 'Senior SWE', fit: 92, description: 'Current trajectory path', action: 'Stay' },
-    { title: 'Solutions Architect', fit: 73, description: 'Architecture focus', action: 'Explore' }
-];
+// const careerRecommendations = [
+//     { title: 'Technical Lead', fit: 87, description: 'Leadership + Technical Excellence', action: 'Switch' },
+//     { title: 'Senior SWE', fit: 92, description: 'Current trajectory path', action: 'Stay' },
+//     { title: 'Solutions Architect', fit: 73, description: 'Architecture focus', action: 'Explore' }
+// ];
 
-// action is enum : ["switch", "stay", "explore"]
+// // action is enum : ["switch", "stay", "explore"]
 
-const preparationPaths = [
-    { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
-    { id: 2, domain: 'Web Development', company: 'Amazon', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "web_development", started: "12-6-2025" },
-    { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
-];
+// const preparationPaths = [
+//     { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
+//     { id: 2, domain: 'Web Development', company: 'Amazon', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "web_development", started: "12-6-2025" },
+//     { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
+// ];
 
-const recentSessions = [
-    { id: 1, date: '2025-10-03', domain: 'React Development', score: 85, type: 'Technical', status: 'Pass' },
-    { id: 2, date: '2025-10-01', domain: 'System Design', score: 72, type: 'Design', status: 'Pass' },
-    { id: 3, date: '2025-09-28', domain: 'Behavioral', score: 88, type: 'Behavioral', status: 'Pass' },
-    { id: 4, date: '2025-09-25', domain: 'SQL Queries', score: 65, type: 'Technical', status: 'Review' },
-    { id: 5, date: '2025-09-22', domain: 'JavaScript Algorithms', score: 90, type: 'Technical', status: 'Pass' }
-];
+// const recentSessions = [
+//     { id: 1, date: '2025-10-03', domain: 'React Development', score: 85, type: 'Technical', status: 'Pass' },
+//     { id: 2, date: '2025-10-01', domain: 'System Design', score: 72, type: 'Design', status: 'Pass' },
+//     { id: 3, date: '2025-09-28', domain: 'Behavioral', score: 88, type: 'Behavioral', status: 'Pass' },
+//     { id: 4, date: '2025-09-25', domain: 'SQL Queries', score: 65, type: 'Technical', status: 'Review' },
+//     { id: 5, date: '2025-09-22', domain: 'JavaScript Algorithms', score: 90, type: 'Technical', status: 'Pass' }
+// ];
 
 const performanceMetrics = {
     contentScores: { grammar: 82, relevance: 88, coherence: 85 },
@@ -140,11 +140,11 @@ const notifications = [
     { id: 3, type: 'success', message: 'You earned the "SQL Master" badge!', priority: 'low' }
 ];
 
-const suggestions = [
-    'Focus on SQL – 2 weak answers last week',
-    'Practice system design for FAANG interviews',
-    'Your behavioral scores are excellent – maintain momentum'
-];
+// const suggestions = [
+//     'Focus on SQL – 2 weak answers last week',
+//     'Practice system design for FAANG interviews',
+//     'Your behavioral scores are excellent – maintain momentum'
+// ];
 
 // const generateHeatmapData = () => {
 //   const data = [];
@@ -163,7 +163,8 @@ const suggestions = [
 
 
 const Dashboard = () => {
-    const { user, setUser, isEditing, setIsEditing, editedUser, setEditedUser, saveProfile, resetProfile, sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth } = useStore();
+    //  setIsEditing, editedUser, setEditedUser, saveProfile, resetProfile, 
+    const { user, setUser, isEditing, sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth } = useStore();
     const [activeTab, setActiveTab] = useState('overview');
     const [isResizing, setIsResizing] = useState(false);
     // heatmapData was removed because the heatmap UI is currently commented out
@@ -252,13 +253,13 @@ const Dashboard = () => {
                 // console.log(response.data.data)
                 let data = response.data.data
                 // console.log("profile ; ", data.profile)
-                setUser({
-                    ...user,
-                    name: data.profile.name,
-                    email: data.profile.email,
-                    location: data.profile.location,
-                    skills: data.skills,
-                })
+                setUser(prev => ({
+                    ...prev,
+                    name: data.profile?.name || prev.name || "",
+                    email: data.profile?.email || prev.email || "",
+                    location: data.profile?.location || prev.location || "",
+                    skills: data.skills || prev.skills || [],
+                }))
             }
             else {
                 console.error("Unable to fetch data")
@@ -340,10 +341,10 @@ const Dashboard = () => {
                     <div className="p-6 border-b border-gray-200">
                         <div className="flex items-center space-x-3">
                             <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-                                {user.name.split(' ').map(n => n[0]).join('')}
+                                {(user.name || "").split(' ').map(n => n[0]).join('')}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                                <p className="text-sm font-semibold text-gray-900 truncate">{user.name || "User"}</p>
                                 <p className="text-xs text-gray-500 truncate">{user.email}</p>
                             </div>
                         </div>
@@ -428,7 +429,7 @@ const Dashboard = () => {
                                 </button>
                                 <div>
                                     <h2 className="text-2xl font-bold text-gray-900 capitalize">{activeTab}</h2>
-                                    <p className="text-sm text-gray-500">Welcome back, {user.name.split(' ')[0]}!</p>
+                                    <p className="text-sm text-gray-500">Welcome back, {(user.name || "User").split(' ')[0]}!</p>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3">
@@ -468,12 +469,12 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {activeTab === 'overview' && 
-                    <Overview user={user} 
-                        isEditing={isEditing}
-                    />}
+                    {activeTab === 'overview' &&
+                        <Overview user={user}
+                            isEditing={isEditing}
+                        />}
 
-                    {activeTab === 'interviews' && <DashInterviews/>}
+                    {activeTab === 'interviews' && <DashInterviews />}
 
                     {activeTab === 'progress' && (
                         <div className="space-y-6">

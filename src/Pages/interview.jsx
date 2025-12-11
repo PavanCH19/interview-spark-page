@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Clock, Brain, Target, ChevronRight, Lightbulb, RotateCcw, CheckCircle, XCircle, ChevronLeft, Mic, Square, Send } from 'lucide-react';
 import { Download, AlertCircle } from 'lucide-react';
 import axios from 'axios';
@@ -707,6 +708,7 @@ const SuccessModal = ({ onClose, sessionData }) => {
 };
 
 const InterviewSessionUI = ({ domain }) => {
+    const navigate = useNavigate();
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState({});
@@ -714,6 +716,7 @@ const InterviewSessionUI = ({ domain }) => {
     const [hintsUsed, setHintsUsed] = useState({});
     const [timeRemaining, setTimeRemaining] = useState('45:00');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Fetch Questions from API
     useEffect(() => {
@@ -812,25 +815,108 @@ const InterviewSessionUI = ({ domain }) => {
         }
     };
 
+
+    // const handleSubmit = async () => {
+    //     try {
+    //         const formData = new FormData();
+
+    //         const payload = {
+    //             domain,
+    //             totalQuestions,
+    //             answeredCount: Object.keys(answers).length,
+    //             hintsUsed,
+    //             completedAt: new Date().toISOString(),
+    //             timeRemaining
+    //         };
+
+    //         formData.append("data", JSON.stringify(payload));
+
+    //         for (const [qid, ans] of Object.entries(answers)) {
+    //             if (!ans) continue;
+
+    //             if (ans instanceof File) {
+    //                 formData.append(`answers[${qid}]`, ans);
+    //             } else {
+    //                 formData.append(`answers[${qid}]`, ans);
+    //             }
+    //         }
+
+    //         // Debug output
+    //         for (const p of formData.entries()) {
+    //             console.log("FD:", p[0], p[1]);
+    //         }
+
+    //         const response = await axios.post(
+    //             "http://localhost:3000/api/interview/submit-test",
+    //             formData,
+    //             {
+    //                 headers: {
+    //                     Authorization: `Bearer ${localStorage.getItem("token")}`
+    //                 }
+    //             }
+    //         );
+
+    //         console.log("Submit success:", response.data);
+    //         alert("Submission successful! Redirecting to results...");
+    //         navigate('/interview-results');
+
+    //     } catch (err) {
+    //         console.error("Submit failed:", err);
+    //         alert("Submit failed: " + err.message);
+    //     }
+    // };
+
     const handleSubmit = async () => {
-        const sessionData = {
-            domain,
-            totalQuestions,
-            answeredCount: Object.keys(answers).length,
-            answers,
-            hintsUsed,
-            completedAt: new Date().toISOString(),
-            timeRemaining
-        };
+        setIsSubmitting(true);
+        try {
+            const formData = new FormData();
 
-        console.log('=== INTERVIEW SESSION DATA ===');
-        // console.log(JSON.stringify(sessionData, null, 2));        onRecordingComplete?.(wavFile); // wavFile is a File object
-        console.log("Session data✨", sessionData)
-        const response = await axios.post("http://localhost:3000/api/interview/submit-test", sessionData)
-        console.log(response)
+            const payload = {
+                domain,
+                totalQuestions,
+                answeredCount: Object.keys(answers).length,
+                hintsUsed,
+                completedAt: new Date().toISOString(),
+                timeRemaining
+            };
 
-        setShowSuccessModal(true);
+            formData.append("data", JSON.stringify(payload));
+
+            for (const [qid, ans] of Object.entries(answers)) {
+                if (!ans) continue;
+
+                if (ans instanceof File) {
+                    formData.append(`answers[${qid}]`, ans);
+                } else {
+                    formData.append(`answers[${qid}]`, ans);
+                }
+            }
+
+            // Debug output
+            for (const p of formData.entries()) {
+                console.log("FD:", p[0], p[1]);
+            }
+
+            const response = await axios.post(
+                "http://localhost:3000/api/interview/submit-test",
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                    }
+                }
+            );
+
+            console.log("Submit success:", response.data);
+            navigate('/interview-results', { state: response.data });
+
+        } catch (err) {
+            console.error("Submit failed:", err);
+            alert("Submit failed: " + err.message);
+            setIsSubmitting(false);
+        }
     };
+
 
     const handleRepeat = () => {
         const questionId = currentQuestion._id;
@@ -951,6 +1037,16 @@ const InterviewSessionUI = ({ domain }) => {
                         answeredCount: Object.keys(answers).length
                     }}
                 />
+            )}
+
+            {isSubmitting && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+                    <div className="bg-white rounded-2xl p-8 shadow-2xl animate-scale-in text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <h2 className="text-xl font-bold text-gray-800 mb-2">Submitting Assessment</h2>
+                        <p className="text-gray-600">Please wait while we process your answers...</p>
+                    </div>
+                </div>
             )}
 
             <style>{`

@@ -266,35 +266,6 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
         }
     };
 
-    // Function to send to backend (example)
-    const sendToBackend = async () => {
-        if (!wavFileRef.current) {
-            console.error('No WAV file available');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('audio', wavFileRef.current); // This sends the actual .wav file
-        formData.append('duration', recordingTime);
-        formData.append('timestamp', Date.now());
-
-        try {
-            const response = await fetch('/api/upload-audio', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                console.log('Upload successful:', result);
-            } else {
-                console.error('Upload failed:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Error uploading file:', error);
-        }
-    };
-
     // Cleanup
     useEffect(() => {
         return () => {
@@ -770,7 +741,18 @@ const InterviewSessionUI = ({ domain }) => {
 
                 const data = await response.json();
                 console.log("✅ API Response:", data);
-                setQuestions(data.data.result.questions_recommended);
+                console.log("📊 Full response structure:", JSON.stringify(data, null, 2));
+
+                // Safely access the nested structure with checks
+                const questionsData = data?.data?.questions || data?.data?.result?.questions_recommended || data?.questions_recommended || data?.result?.questions_recommended || [];
+
+                if (!questionsData || questionsData.length === 0) {
+                    console.warn("⚠️ No questions found. Response structure:", data);
+                } else {
+                    console.log("✅ Questions loaded successfully:", questionsData.length, "questions");
+                }
+
+                setQuestions(Array.isArray(questionsData) ? questionsData : []);
             } catch (error) {
                 console.error("❌ Error fetching questions:", error);
                 alert("Failed to load questions. Please try again.");
@@ -843,7 +825,7 @@ const InterviewSessionUI = ({ domain }) => {
 
         console.log('=== INTERVIEW SESSION DATA ===');
         // console.log(JSON.stringify(sessionData, null, 2));        onRecordingComplete?.(wavFile); // wavFile is a File object
-        console.log("Session data✨",sessionData)
+        console.log("Session data✨", sessionData)
         const response = await axios.post("http://localhost:3000/api/interview/submit-test", sessionData)
         console.log(response)
 

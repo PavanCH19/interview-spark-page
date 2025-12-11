@@ -1,22 +1,60 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { User, BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Zap, ChevronRight, Play, RotateCcw, Download, Shield, Edit2, Save, X, CheckCircle, AlertCircle, Trophy, Flame, Star, Clock, MessageSquare, BarChart3, Brain, Menu, Home, LogOut, HelpCircle, GripVertical } from 'lucide-react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import RecentSession from '../sessions/recent_sessions';
 
 const DashInterviews = () => {
     const navigate = useNavigate();
+    const [showSession, setShowSession] = useState(false);
     const preparationPaths = [
         { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
         { id: 2, domain: 'Web Development', company: 'Amazon', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "web_development", started: "12-6-2025" },
         { id: 3, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
     ];
 
-    const recentSessions = [
+    const [recentSessions, setRecentSessions] = useState([
         { id: 1, date: '2025-10-03', domain: 'React Development', score: 85, type: 'Technical', status: 'Pass' },
         { id: 2, date: '2025-10-01', domain: 'System Design', score: 72, type: 'Design', status: 'Pass' },
         { id: 3, date: '2025-09-28', domain: 'Behavioral', score: 88, type: 'Behavioral', status: 'Pass' },
         { id: 4, date: '2025-09-25', domain: 'SQL Queries', score: 65, type: 'Technical', status: 'Review' },
         { id: 5, date: '2025-09-22', domain: 'JavaScript Algorithms', score: 90, type: 'Technical', status: 'Pass' }
-    ];
+    ]);
+
+    useEffect(()=>{
+        const getSessions = async ()=>{
+            const response = await axios.get('http://localhost:3000/api/interview/recent-sessions',{
+                headers : {
+                    Authorization : localStorage.getItem('token')
+                }
+            })
+            if(response.status !==200){
+                console.error('response failed')
+            }
+            else{
+                console.log("sessions array")
+                console.log(response.data.sessions)
+                const sessions = response.data.sessions;
+                const sessionDataForUI = sessions.map((session)=>{
+                    return {
+                        id : session._id,
+                        date : session.completedAt.slice(0,10),
+                        domain : session.domain,
+                        score : session.score,
+                        type : session.session_type,
+                        status : session.status
+                    }
+                })
+                console.log("filtered data")
+                console.log(sessionDataForUI)
+                setRecentSessions(sessionDataForUI)
+            }
+        }
+
+        getSessions();
+    },[])
+
     return (
         <>
             <div className="space-y-6">
@@ -25,25 +63,10 @@ const DashInterviews = () => {
                     <h2 className="text-3xl font-bold mb-3">Ready for Your Next Challenge?</h2>
                     <p className="mb-8 text-indigo-100 text-lg">Start an adaptive AI-powered interview session tailored to your goals.</p>
                     <div className="flex flex-wrap gap-4">
-                        {/* <select className="px-5 py-3 bg-white text-gray-900 rounded-xl font-semibold shadow-lg focus:ring-2 focus:ring-white focus:outline-none">
-                                                    <option>Select Domain</option>
-                                                    <option>Frontend Development</option>
-                                                    <option>Backend Engineering</option>
-                                                    <option>System Design</option>
-                                                    <option>Behavioral</option>
-                                                    <option>Data Structures & Algorithms</option>
-                                                </select>
-                                                <select className="px-5 py-3 bg-white text-gray-900 rounded-xl font-semibold shadow-lg focus:ring-2 focus:ring-white focus:outline-none">
-                                                    <option>Select Company</option>
-                                                    <option>Google</option>
-                                                    <option>Amazon</option>
-                                                    <option>Meta</option>
-                                                    <option>Microsoft</option>
-                                                    <option>Generic</option>
-                                                </select> */}
+                        {/* start interview button */}
                         <button className="px-8 py-3 bg-white text-indigo-600 hover:bg-gray-100 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg hover:shadow-xl"
                             onClick={() => {
-                                navigate('/interview')
+                                navigate('/interview', {state : {domain : "ai_ml"}})
                             }}
                         >
                             <Play className="w-5 h-5" />
@@ -98,14 +121,13 @@ const DashInterviews = () => {
                                     </div>
 
                                     {/* Button */}
-                                    <button className="mt-4 w-full py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow hover:shadow-lg hover:scale-[1.03] transition"
-                                        onClick={() => {
-                                            navigate("/interview")
-                                        }}
+                                    <Link className="mt-4 w-full py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow hover:shadow-lg hover:scale-[1.03] transition"
+                                        to='/interview'
+                                        state={{domain : session.endpoint}}
                                     >
                                         <Play className="w-4 h-4" />
                                         Resume
-                                    </button>
+                                    </Link>
                                 </div>
                             ))}
                         </div>
@@ -153,7 +175,12 @@ const DashInterviews = () => {
                                             </span>
                                         </td>
                                         <td className="py-4 px-4">
-                                            <button className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold flex items-center space-x-1 transition-colors">
+                                            <button className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold flex items-center space-x-1 transition-colors"
+                                                onClick={()=>{
+                                                    setShowSession(true)
+                                                    console.log('clicked')
+                                                }}
+                                            >
                                                 <span>View Details</span>
                                                 <ChevronRight className="w-4 h-4" />
                                             </button>
@@ -162,8 +189,10 @@ const DashInterviews = () => {
                                 ))}
                             </tbody>
                         </table>
+                        
                     </div>
                 </div>
+                {showSession && <RecentSession setIsOpen={true} isOpen={true} session={null} />  }
             </div>
         </>
     )

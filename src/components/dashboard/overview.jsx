@@ -1,14 +1,26 @@
 import { BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { User, BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Zap, ChevronRight, Play, RotateCcw, Download, Shield, Edit2, Save, X, CheckCircle, AlertCircle, Trophy, Flame, Star, Clock, MessageSquare, BarChart3, Brain, Menu, Home, LogOut, HelpCircle, GripVertical } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const Overview = ({ user, isEditing }) => {
 
     // Mock data (same as before)
-    const assessmentData = {
+    const [assessmentData, setAssessmentData] = useState({
         overallScore: 78,
         weakSkills: ['System Design', 'SQL Optimization', 'Docker'],
         strongSkills: ['React', 'JavaScript', 'Communication']
-    };
+    });
+
+    useEffect(() => {
+
+        setAssessmentData({
+            ...assessmentData,
+            strongSkills: user.skill_analysis.stronger_skills,
+            weakSkills: user.skill_analysis.weaker_skills,
+            overallScore: user.score
+        })
+        // console.log('❤️👌assessment data : ', assessmentData)
+    }, [user]);
 
     const skillComparison = [
         { skill: 'JavaScript', user: 85, required: 80 },

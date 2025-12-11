@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, Brain, Target, ChevronRight, Lightbulb, RotateCcw, CheckCircle, XCircle, ChevronLeft, Mic, Square, Send } from 'lucide-react';
 import { Download, AlertCircle } from 'lucide-react';
 import axios from 'axios';
@@ -707,8 +707,10 @@ const SuccessModal = ({ onClose, sessionData }) => {
     );
 };
 
-const InterviewSessionUI = ({ domain }) => {
+const InterviewSessionUI = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const domain = location.state.domain;
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState({});

@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import DashInterviews from '../components/dashboard/dashInterviews';
 import Overview from '../components/dashboard/overview';
-
+import Loading from '../components/loading'
 
 // Zustand-like store using React hooks
 
@@ -31,6 +31,8 @@ const useStore = () => {
             "SQL",
             "System Design",
         ],
+        score : 0,
+        skill_analysis : userData.interview_sessions?.[0].skill_analysis ||'',
         education: userEducation[0]?.college || "BS Computer Science - Stanford University",
         careerPath: userProfile?.careerPath || "Software Engineering",
         suggestedPath: userProfile?.suggestedPath || "Technical Lead",
@@ -130,6 +132,7 @@ const Dashboard = () => {
     const { user, setUser, isEditing, sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth } = useStore();
     const [activeTab, setActiveTab] = useState('overview');
     const [isResizing, setIsResizing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     // heatmapData was removed because the heatmap UI is currently commented out
     const sidebarRef = useRef(null);
     const navigate = useNavigate();
@@ -185,52 +188,42 @@ const Dashboard = () => {
         navigate('/auth');
     }
 
-    //  name: userProfile?.name || "",
-    //         email: userData?.user?.email || "",
-    //         title: userProfile?.title || "Senior Software Engineer",
-    //         experience: userProfile?.experience || "5 years",
-    //         location: userProfile?.location || "",
-    //         skills: userProfile?.skills || [
-    //             "JavaScript",
-    //             "React",
-    //             "Node.js",
-    //             "Python",
-    //             "SQL",
-    //             "System Design",
-    //         ],
-    //         education: userEducation[0]?.college || "BS Computer Science - Stanford University",
-    //         careerPath: userProfile?.careerPath || "Software Engineering",
-    //         suggestedPath: userProfile?.suggestedPath || "Technical Lead",
-    //         level: userProfile?.level || 12,
-    //         xp: userProfile?.xp || 2840,
-    //         xpToNext: userProfile?.xpToNext || 3000,
-    //         streak: userProfile?.streak || 7,
-    //         badges: userProfile?.badges 
-
+    
     useEffect(() => {
         const userDetails = async () => {
+            setIsLoading(true)
             let response = await api.get("http://localhost:3000/api/auth/getUserDetails")
             if (response.status === 200) {
                 // console.log("========================")
                 // console.log("below is the fetched data")
-                // console.log(response.data.data)
+                // console.log("❤️ response data",response.data.data)
                 let data = response.data.data
-                console.log("profile ; ", data.profile)
+                // console.log(data)
+                // console.log("profile ; ", data.profile)
+                // console.log("🤣",data.interview_sessions[0].skill_analysis)
                 setUser(prev => ({
                     ...prev,
                     name: data.profile?.name,
-                    email: data.email,
+                    email: data.profile?.email,
                     location: data.profile?.location,
                     skills: data.skills,
+                    skill_analysis : data.interview_sessions[0].skill_analysis,
+                    score: data.interview_sessions[0].score
                 }))
+                setIsLoading(false)
             }
             else {
                 console.error("Unable to fetch data")
             }
         }
         userDetails()
-        // console.log('⚠️')
     }, [])
+
+    // useEffect(()=>{
+    //     console.log("✨user : ", user);
+    //     console.log("skill_analysis")
+    //     console.log(user.skill_analysis)
+    // }, [user])
 
     const StatCard = ({ icon: Icon, label, value, trend, gradient }) => (
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
@@ -282,6 +275,8 @@ const Dashboard = () => {
     return (
         <div className="flex h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 overflow-hidden">
             {/* Sidebar */}
+            
+
             {sidebarOpen && (
                 <aside
                     ref={sidebarRef}
@@ -433,10 +428,8 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {activeTab === 'overview' &&
-                        <Overview user={user}
-                            isEditing={isEditing}
-                        />}
+    {activeTab === 'overview' && !isLoading ? (<Overview user={user} isEditing={isEditing} />) : null}
+
 
                     {activeTab === 'interviews' && <DashInterviews />}
 

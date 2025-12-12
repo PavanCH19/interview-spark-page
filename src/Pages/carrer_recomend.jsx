@@ -339,99 +339,99 @@ const AlternativeDomains = ({ suggestions, onSelectDomain }) => {
 };
 
 // Learning Resources Component
-const LearningResources = ({ missingSkills, domain }) => {
-    const [filter, setFilter] = useState('all');
+// const LearningResources = ({ missingSkills, domain }) => {
+//     const [filter, setFilter] = useState('all');
 
-    const generateResources = (skills) => {
-        return skills.map((skill, idx) => ({
-            type: idx % 3 === 0 ? 'course' : idx % 3 === 1 ? 'video' : 'article',
-            title: `Master ${skill.charAt(0).toUpperCase() + skill.slice(1)}`,
-            description: `Complete guide to learning ${skill} from beginner to advanced level`,
-            duration: idx % 3 === 0 ? '4-6 weeks' : idx % 3 === 1 ? '2-4 hours' : '30-45 min',
-            cost: idx % 2 === 0 ? 'Free' : '$29-49',
-            skill: skill
-        }));
-    };
+//     const generateResources = (skills) => {
+//         return skills.map((skill, idx) => ({
+//             type: idx % 3 === 0 ? 'course' : idx % 3 === 1 ? 'video' : 'article',
+//             title: `Master ${skill.charAt(0).toUpperCase() + skill.slice(1)}`,
+//             description: `Complete guide to learning ${skill} from beginner to advanced level`,
+//             duration: idx % 3 === 0 ? '4-6 weeks' : idx % 3 === 1 ? '2-4 hours' : '30-45 min',
+//             cost: idx % 2 === 0 ? 'Free' : '$29-49',
+//             skill: skill
+//         }));
+//     };
 
-    const getIcon = (type) => {
-        switch (type) {
-            case 'video': return <Video className="w-5 h-5" />;
-            case 'course': return <BookOpen className="w-5 h-5" />;
-            case 'article': return <FileText className="w-5 h-5" />;
-            default: return <BookOpen className="w-5 h-5" />;
-        }
-    };
+//     const getIcon = (type) => {
+//         switch (type) {
+//             case 'video': return <Video className="w-5 h-5" />;
+//             case 'course': return <BookOpen className="w-5 h-5" />;
+//             case 'article': return <FileText className="w-5 h-5" />;
+//             default: return <BookOpen className="w-5 h-5" />;
+//         }
+//     };
 
-    const resources = generateResources(missingSkills);
-    const filteredResources = filter === 'all'
-        ? resources
-        : resources.filter(r => r.type === filter);
+//     const resources = generateResources(missingSkills);
+//     const filteredResources = filter === 'all'
+//         ? resources
+//         : resources.filter(r => r.type === filter);
 
-    return (
-        <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-3xl shadow-2xl p-6 md:p-8 border border-orange-100">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <Brain className="w-6 h-6 text-orange-600" />
-                Recommended Learning Path for {domain}
-            </h2>
+//     return (
+//         <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-3xl shadow-2xl p-6 md:p-8 border border-orange-100">
+//             <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+//                 <Brain className="w-6 h-6 text-orange-600" />
+//                 Recommended Learning Path for {domain}
+//             </h2>
 
-            <div className="flex flex-wrap gap-2 mb-6">
-                {['all', 'video', 'course', 'article'].map(type => (
-                    <button
-                        key={type}
-                        onClick={() => setFilter(type)}
-                        className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 ${filter === type
-                            ? 'bg-orange-500 text-white shadow-lg'
-                            : 'bg-white text-gray-700 hover:bg-orange-100'
-                            }`}
-                    >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </button>
-                ))}
-            </div>
+//             <div className="flex flex-wrap gap-2 mb-6">
+//                 {['all', 'video', 'course', 'article'].map(type => (
+//                     <button
+//                         key={type}
+//                         onClick={() => setFilter(type)}
+//                         className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 ${filter === type
+//                             ? 'bg-orange-500 text-white shadow-lg'
+//                             : 'bg-white text-gray-700 hover:bg-orange-100'
+//                             }`}
+//                     >
+//                         {type.charAt(0).toUpperCase() + type.slice(1)}
+//                     </button>
+//                 ))}
+//             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredResources.map((resource, i) => (
-                    <div
-                        key={i}
-                        className="bg-white rounded-2xl p-5 shadow-md hover:shadow-xl transition-all duration-300"
-                    >
-                        <div className="flex items-start gap-3 mb-3">
-                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
-                                {getIcon(resource.type)}
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="font-bold text-gray-800">{resource.title}</h3>
-                                <span className="text-xs text-gray-500 capitalize">{resource.type}</span>
-                            </div>
-                        </div>
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                 {filteredResources.map((resource, i) => (
+//                     <div
+//                         key={i}
+//                         className="bg-white rounded-2xl p-5 shadow-md hover:shadow-xl transition-all duration-300"
+//                     >
+//                         <div className="flex items-start gap-3 mb-3">
+//                             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+//                                 {getIcon(resource.type)}
+//                             </div>
+//                             <div className="flex-1">
+//                                 <h3 className="font-bold text-gray-800">{resource.title}</h3>
+//                                 <span className="text-xs text-gray-500 capitalize">{resource.type}</span>
+//                             </div>
+//                         </div>
 
-                        <p className="text-sm text-gray-600 mb-4">{resource.description}</p>
+//                         <p className="text-sm text-gray-600 mb-4">{resource.description}</p>
 
-                        <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                                <Clock className="w-4 h-4" />
-                                <span>{resource.duration}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <DollarSign className="w-4 h-4" />
-                                <span>{resource.cost}</span>
-                            </div>
-                        </div>
+//                         <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+//                             <div className="flex items-center gap-1">
+//                                 <Clock className="w-4 h-4" />
+//                                 <span>{resource.duration}</span>
+//                             </div>
+//                             <div className="flex items-center gap-1">
+//                                 <DollarSign className="w-4 h-4" />
+//                                 <span>{resource.cost}</span>
+//                             </div>
+//                         </div>
 
-                        <div className="flex gap-2">
-                            <button className="flex-1 px-4 py-2 border-2 border-orange-500 text-orange-600 font-semibold rounded-lg hover:bg-orange-50 transition-all">
-                                Add to Plan
-                            </button>
-                            <button className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all">
-                                Start Now
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
+//                         <div className="flex gap-2">
+//                             <button className="flex-1 px-4 py-2 border-2 border-orange-500 text-orange-600 font-semibold rounded-lg hover:bg-orange-50 transition-all">
+//                                 Add to Plan
+//                             </button>
+//                             <button className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all">
+//                                 Start Now
+//                             </button>
+//                         </div>
+//                     </div>
+//                 ))}
+//             </div>
+//         </div>
+//     );
+// };
 
 // Modal Component
 const DecisionModal = ({ show, onClose, children }) => {
@@ -971,17 +971,17 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
                 )}
 
 
-                {/* Learning Resources */}
+                {/* Learning Resources
                 {assessmentData.alternative_domain_suggestions?.length > 0 && (
                     <LearningResources
                         missingSkills={assessmentData.alternative_domain_suggestions[0]?.key_missing_skills || []}
                         domain={assessmentData.alternative_domain_suggestions[0]?.domain || assessmentData.metadata.domain}
                     />
-                )}
+                )} */}
 
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <style>{`
                         .scrollbar-hide::-webkit-scrollbar {
                         display: none;
@@ -1001,7 +1001,7 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
                         <Download className="w-5 h-5" />
                         Download PDF
                     </button>
-                </div>
+                </div> */}
 
 
 

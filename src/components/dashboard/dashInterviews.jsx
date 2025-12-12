@@ -5,16 +5,28 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import RecentSession from '../sessions/recent_sessions';
 
-const DashInterviews = () => {
+const DashInterviews = ({ target_domains }) => {
     const navigate = useNavigate();
     const [showSession, setShowSession] = useState(false);
     const [sessions, setSessions] = useState([]);
     const [selectedSession, setSelectedSession] = useState(null);
-    const preparationPaths = [
-        { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
-        { id: 2, domain: 'Web Development', company: 'Amazon', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "web_development", started: "12-6-2025" },
-        // { id: 3, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
-    ];
+    const [preparationPaths, setPreparationPaths] = useState([
+        { id: 1, displayName: 'AI/ML', endpoint: "ai_ml" },
+        { id: 2, displayName: 'Web Development', endpoint: "web_development" },
+        { id: 3, displayName: 'Data Science', endpoint: "data_science" },
+    ]);
+
+    // const domain_endpoint = [
+    //     {
+    //         domain : "Data Science",
+    //         endpoint : 'data_science'
+    //     }
+    // ]
+
+    function toSnakeCase(str) {
+        if (!str) return "";
+        return str.trim().toLowerCase().replace(/\s+/g, "_");
+    }
 
     const [recentSessions, setRecentSessions] = useState([
         { id: 1, date: '2025-10-03', domain: 'React Development', score: 85, type: 'Technical', status: 'Pass' },
@@ -73,6 +85,21 @@ const DashInterviews = () => {
         }
 
         getSessions();
+
+        // sessions = []
+        // target_domains = []
+        console.log("📗📗target_domains", target_domains)
+    }, [])
+
+    useEffect(() => {
+        const paths = target_domains.map((item, index) => {
+            return {
+                id: item.id ?? index,                         // fallback index
+                displayName: item,                       // shown in UI
+                endpoint: toSnakeCase(item)            // converted slug
+            };
+        });
+        setPreparationPaths(paths)        
     }, [])
 
     return (
@@ -86,11 +113,11 @@ const DashInterviews = () => {
                         {/* start interview button */}
                         <button className="px-8 py-3 bg-white text-indigo-600 hover:bg-gray-100 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg hover:shadow-xl"
                             onClick={() => {
-                                navigate('/interview', { state: { domain: "ai_ml" } })
+                                navigate('/setup')
                             }}
                         >
                             <Play className="w-5 h-5" />
-                            <span>Start Interview</span>
+                            <span>Start with New Path</span>
                         </button>
                     </div>
                 </div>
@@ -106,6 +133,8 @@ const DashInterviews = () => {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
 
+                            {/* preparation paths displayes here | take interview for the domain */}
+                            {/* target_domains */}
                             {preparationPaths.map((session) => (
                                 <div
                                     key={session.id}
@@ -115,28 +144,9 @@ const DashInterviews = () => {
                                     <div className="space-y-3">
                                         <div>
                                             <h4 className="text-base font-bold text-gray-900 truncate">
-                                                {session.domain}
+                                                {session.displayName}
                                             </h4>
-                                            <p className="text-xs text-gray-600 font-medium truncate">
-                                                {session.company} • Started {session.started}
-                                            </p>
-                                        </div>
 
-                                        {/* Session Info */}
-                                        <div className="bg-white/60 p-3 rounded-xl border border-amber-100 space-y-1.5">
-                                            <p className="text-xs font-semibold text-gray-800">
-                                                Last Session
-                                            </p>
-
-                                            <div className="flex justify-between text-xs text-gray-700">
-                                                <span>Score</span>
-                                                <span className="font-medium">{session.lastSessionScore}</span>
-                                            </div>
-
-                                            <div className="flex justify-between text-xs text-gray-700">
-                                                <span>Date</span>
-                                                <span className="font-medium">{session.lastSession}</span>
-                                            </div>
                                         </div>
                                     </div>
 
@@ -146,10 +156,13 @@ const DashInterviews = () => {
                                         state={{ domain: session.endpoint }}
                                     >
                                         <Play className="w-4 h-4" />
-                                        Resume
+                                        Start Interview
                                     </Link>
                                 </div>
                             ))}
+
+                            
+
                         </div>
                     </div>
                 )}

@@ -8,11 +8,12 @@ import RecentSession from '../sessions/recent_sessions';
 const DashInterviews = () => {
     const navigate = useNavigate();
     const [showSession, setShowSession] = useState(false);
-    const [sessions, setSessions] = useState({});
+    const [sessions, setSessions] = useState([]);
+    const [selectedSession, setSelectedSession] = useState(null);
     const preparationPaths = [
         { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
         { id: 2, domain: 'Web Development', company: 'Amazon', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "web_development", started: "12-6-2025" },
-        { id: 3, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
+        // { id: 3, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
     ];
 
     const [recentSessions, setRecentSessions] = useState([
@@ -23,10 +24,22 @@ const DashInterviews = () => {
         { id: 5, date: '2025-09-22', domain: 'JavaScript Algorithms', score: 90, type: 'Technical', status: 'Pass' }
     ]);
 
-    const handleViewDetails=()=>{
-        setShowSession(true)
-        console.log('clicked')
+    const handleViewDetails = (sessionId) => {
+        // Find the session from the sessions array that matches the sessionId
+        const session = sessions.find(s => s._id === sessionId);
+        if (session) {
+            setSelectedSession(session);
+            setShowSession(true);
+            console.log('Selected session:', session);
+        } else {
+            console.error('Session not found:', sessionId);
+        }
     }
+
+    useEffect(()=>{
+        console.log("😂😍😍")
+        console.log(sessions)
+    },[sessions])
 
     useEffect(()=>{
         const getSessions = async ()=>{
@@ -42,7 +55,7 @@ const DashInterviews = () => {
                 console.log("sessions array")
                 console.log(response.data.sessions)
                 const sessions = response.data.sessions;
-                setSessions(sessions)
+                setSessions(sessions);
                 const sessionDataForUI = sessions.map((session)=>{
                     return {
                         id : session._id,
@@ -183,8 +196,7 @@ const DashInterviews = () => {
                                         </td>
                                         <td className="py-4 px-4">
                                             <button className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold flex items-center space-x-1 transition-colors"
-                                                onClick={handleViewDetails
-                                                }
+                                                onClick={() => handleViewDetails(session.id)}
                                             >
                                                 <span>View Details</span>
                                                 <ChevronRight className="w-4 h-4" />
@@ -197,7 +209,16 @@ const DashInterviews = () => {
                         
                     </div>
                 </div>
-                {showSession && <RecentSession setIsOpen={()=>setShowSession(!showSession)} isOpen={showSession} session={sessions} />  }
+                {showSession && selectedSession && (
+                    <RecentSession 
+                        setIsOpen={() => {
+                            setShowSession(false);
+                            setSelectedSession(null);
+                        }} 
+                        isOpen={showSession} 
+                        session={selectedSession} 
+                    />
+                )}
             </div>
         </>
     )

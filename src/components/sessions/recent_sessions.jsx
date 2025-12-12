@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   TrendingUp,
   TrendingDown,
@@ -14,6 +14,7 @@ import {
 
 const RecentSession = ({ isOpen, setIsOpen, session }) => {
   if (!isOpen || !session) return null;
+  console.log('✨✨',session)
 
   // ---------------------------
   // SKILL CONVERSION (MATCHES COMMENTED UI)
@@ -36,28 +37,31 @@ const RecentSession = ({ isOpen, setIsOpen, session }) => {
     return obj;
   };
 
-  const skillAnalysis = convertSkills(session.skill_analysis?.skill_averages || {});
-
-  const data = {
-    domain: session.domain,
-    session_number: session.session_number || 1,
-    session_stats: session.detailed_summary?.session_stats || {
-      total_questions: 0,
-      questions_answered: 0,
-      mcq_attempted: 0,
-      voice_attempted: 0,
-      coding_attempted: 0,
-      overall_average: session.score || 0,
-    },
-    skill_analysis: skillAnalysis,
-    top_skills: session.skill_analysis?.stronger_skills || [],
-    weak_skills: session.skill_analysis?.weaker_skills || [],
-    voice_insights: session.detailed_summary?.voice_insights || null,
-    recommendations: session.detailed_summary?.recommendations || {
-      suggested_difficulty: "NA",
-      next_steps: [],
-    },
-  };
+  // Use useMemo to ensure data is properly computed when session changes
+  const data = useMemo(() => {
+    const skillAnalysis = convertSkills(session?.skill_analysis?.skill_averages || {});
+    
+    return {
+      domain: session?.domain || "Unknown",
+      session_number: session?.session_number || 1,
+      session_stats: session?.detailed_summary?.session_stats || {
+        total_questions: 0,
+        questions_answered: 0,
+        mcq_attempted: 0,
+        voice_attempted: 0,
+        coding_attempted: 0,
+        overall_average: session?.score || 0,
+      },
+      skill_analysis: skillAnalysis,
+      top_skills: session?.skill_analysis?.stronger_skills || [],
+      weak_skills: session?.skill_analysis?.weaker_skills || [],
+      voice_insights: session?.detailed_summary?.voice_insights || null,
+      recommendations: session?.detailed_summary?.recommendations || {
+        suggested_difficulty: "NA",
+        next_steps: [],
+      },
+    };
+  }, [session]);
 
   const getScoreColor = (score) => {
     if (score >= 70) return "text-green-600";

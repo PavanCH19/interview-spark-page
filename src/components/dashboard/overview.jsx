@@ -1,15 +1,19 @@
 import { BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { User, BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Zap, ChevronRight, Play, RotateCcw, Download, Shield, Edit2, Save, X, CheckCircle, AlertCircle, Trophy, Flame, Star, Clock, MessageSquare, BarChart3, Brain, Menu, Home, LogOut, HelpCircle, GripVertical } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const Overview = ({ user, isEditing }) => {
-
+    console.log(user)
     // Mock data (same as before)
     const [assessmentData, setAssessmentData] = useState({
         overallScore: 78,
         weakSkills: ['System Design', 'SQL Optimization', 'Docker'],
         strongSkills: ['React', 'JavaScript', 'Communication']
     });
+
+    const [skillComparison, setSkillComparison] = useState([]);
+    const [sessions, setSessions] = useState([]);
 
     useEffect(() => {
         setAssessmentData({
@@ -21,14 +25,70 @@ const Overview = ({ user, isEditing }) => {
          console.log('❤️👌assessment data : ', assessmentData)
     }, [user]);
 
-    const skillComparison = [
-        { skill: 'JavaScript', user: 85, required: 80 },
-        { skill: 'React', user: 90, required: 85 },
-        { skill: 'Node.js', user: 75, required: 80 },
-        { skill: 'SQL', user: 65, required: 85 },
-        { skill: 'System Design', user: 60, required: 90 },
-        { skill: 'Algorithms', user: 70, required: 85 }
-    ];
+    // Fetch sessions data and process skill comparison
+    useEffect(() => {
+        const fetchSessions = async () => {
+            try {
+                const response = await axios.get('http://localhost:3000/api/interview/recent-sessions', {
+                    headers: {
+                        Authorization: localStorage.getItem('token')
+                    }
+                });
+
+                if (response.status === 200 && response.data.success) {
+                    const sessionsData = response.data.sessions || [];
+                    setSessions(sessionsData);
+                    
+                    // Process skill data from all sessions
+                    const skillMap = new Map();
+                    const skillCounts = new Map();
+
+                    // Aggregate skills from all sessions
+                    sessionsData.forEach(session => {
+                        const skillAverages = session.skill_analysis?.skill_averages || {};
+                        
+                        Object.entries(skillAverages).forEach(([skillName, score]) => {
+                            if (skillMap.has(skillName)) {
+                                skillMap.set(skillName, skillMap.get(skillName) + score);
+                                skillCounts.set(skillName, skillCounts.get(skillName) + 1);
+                            } else {
+                                skillMap.set(skillName, score);
+                                skillCounts.set(skillName, 1);
+                            }
+                        });
+                    });
+
+                    // Calculate averages and create skill comparison array
+                    const skillComparisonData = Array.from(skillMap.entries())
+                        .map(([skillName, totalScore]) => {
+                            const count = skillCounts.get(skillName);
+                            const averageScore = count > 0 ? (totalScore / count) : 0;
+                            
+                            // Check if scores are already in percentage (0-100) or need conversion (0-10 scale)
+                            // If average is > 10, assume it's already a percentage, otherwise multiply by 10
+                            const userScore = averageScore > 10 ? Math.round(averageScore) : Math.round(averageScore * 10);
+                            
+                            return {
+                                skill: skillName,
+                                user: Math.min(100, Math.max(0, userScore)), // Clamp between 0-100
+                                required: 70 // Standard requirement baseline
+                            };
+                        })
+                        .sort((a, b) => b.user - a.user) // Sort by user score descending
+                        .slice(0, 10); // Take top 10 skills for better visualization
+
+                    setSkillComparison(skillComparisonData);
+                    console.log('Skill comparison data:', skillComparisonData);
+                }
+            } catch (error) {
+                console.error('Error fetching sessions:', error);
+                // Fallback to empty array or default data
+                setSkillComparison([]);
+            }
+        };
+
+        fetchSessions();
+    }, []);
 
     const careerRecommendations = [
         { title: 'Technical Lead', fit: 87, description: 'Leadership + Technical Excellence', action: 'Switch' },
@@ -223,16 +283,26 @@ const Overview = ({ user, isEditing }) => {
                     {/* Skill Comparison Radar */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
                         <h3 className="text-lg font-bold text-gray-900 mb-4">Skills vs Requirements</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <RadarChart data={skillComparison}>
-                                <PolarGrid stroke="#e5e7eb" />
-                                <PolarAngleAxis dataKey="skill" tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 600 }} />
-                                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 11 }} />
-                                <Radar name="Your Skills" dataKey="user" stroke="#6366f1" fill="#6366f1" fillOpacity={0.6} strokeWidth={2} />
-                                <Radar name="Required" dataKey="required" stroke="#10b981" fill="#10b981" fillOpacity={0.4} strokeWidth={2} />
-                                <Legend wrapperStyle={{ fontSize: '14px', fontWeight: 600 }} />
-                            </RadarChart>
-                        </ResponsiveContainer>
+                        {skillComparison.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={300}>
+                                <RadarChart data={skillComparison}>
+                                    <PolarGrid stroke="#e5e7eb" />
+                                    <PolarAngleAxis dataKey="skill" tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 600 }} />
+                                    <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 11 }} />
+                                    <Radar name="Your Skills" dataKey="user" stroke="#6366f1" fill="#6366f1" fillOpacity={0.6} strokeWidth={2} />
+                                    <Radar name="Required" dataKey="required" stroke="#10b981" fill="#10b981" fillOpacity={0.4} strokeWidth={2} />
+                                    <Legend wrapperStyle={{ fontSize: '14px', fontWeight: 600 }} />
+                                </RadarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-[300px] text-gray-500">
+                                <div className="text-center">
+                                    <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                                    <p className="text-sm font-medium">No skill data available</p>
+                                    <p className="text-xs mt-1">Complete interview sessions to see your skill analysis</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

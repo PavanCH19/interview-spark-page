@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 const RecentSession = ({ isOpen, setIsOpen, session }) => {
-  // if (!isOpen || !session) return null;
+  if (!isOpen || !session) return null;
 
   // ---------------------------
   // SKILL CONVERSION (MATCHES COMMENTED UI)

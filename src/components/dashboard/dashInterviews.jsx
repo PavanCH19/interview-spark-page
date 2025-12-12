@@ -8,6 +8,7 @@ import RecentSession from '../sessions/recent_sessions';
 const DashInterviews = () => {
     const navigate = useNavigate();
     const [showSession, setShowSession] = useState(false);
+    const [sessions, setSessions] = useState({});
     const preparationPaths = [
         { id: 1, domain: 'AI/ML', company: 'Google', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "ai_ml", started: "12-6-2025" },
         { id: 2, domain: 'Web Development', company: 'Amazon', lastSessionScore: "85%", lastSession: '2 days ago', endpoint: "web_development", started: "12-6-2025" },
@@ -21,6 +22,11 @@ const DashInterviews = () => {
         { id: 4, date: '2025-09-25', domain: 'SQL Queries', score: 65, type: 'Technical', status: 'Review' },
         { id: 5, date: '2025-09-22', domain: 'JavaScript Algorithms', score: 90, type: 'Technical', status: 'Pass' }
     ]);
+
+    const handleViewDetails=()=>{
+        setShowSession(true)
+        console.log('clicked')
+    }
 
     useEffect(()=>{
         const getSessions = async ()=>{
@@ -36,6 +42,7 @@ const DashInterviews = () => {
                 console.log("sessions array")
                 console.log(response.data.sessions)
                 const sessions = response.data.sessions;
+                setSessions(sessions)
                 const sessionDataForUI = sessions.map((session)=>{
                     return {
                         id : session._id,
@@ -176,10 +183,8 @@ const DashInterviews = () => {
                                         </td>
                                         <td className="py-4 px-4">
                                             <button className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold flex items-center space-x-1 transition-colors"
-                                                onClick={()=>{
-                                                    setShowSession(true)
-                                                    console.log('clicked')
-                                                }}
+                                                onClick={handleViewDetails
+                                                }
                                             >
                                                 <span>View Details</span>
                                                 <ChevronRight className="w-4 h-4" />
@@ -192,7 +197,7 @@ const DashInterviews = () => {
                         
                     </div>
                 </div>
-                {showSession && <RecentSession setIsOpen={true} isOpen={true} session={null} />  }
+                {showSession && <RecentSession setIsOpen={()=>setShowSession(!showSession)} isOpen={showSession} session={sessions} />  }
             </div>
         </>
     )

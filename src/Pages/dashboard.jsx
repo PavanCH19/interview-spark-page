@@ -193,6 +193,7 @@ const Dashboard = () => {
         const userDetails = async () => {
             setIsLoading(true)
             let response = await api.get("http://localhost:3000/api/auth/getUserDetails")
+            console.log(response)
             if (response.status === 200) {
                 // console.log("========================")
                 // console.log("below is the fetched data")
@@ -207,8 +208,8 @@ const Dashboard = () => {
                     email: data.profile?.email,
                     location: data.profile?.location,
                     skills: data.skills,
-                    skill_analysis : data.interview_sessions[0].skill_analysis,
-                    score: data.interview_sessions[0].score
+                    skill_analysis : data.skill_analysis,
+                    score: data.score
                 }))
                 setIsLoading(false)
             }

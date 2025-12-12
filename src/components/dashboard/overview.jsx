@@ -12,14 +12,13 @@ const Overview = ({ user, isEditing }) => {
     });
 
     useEffect(() => {
-
         setAssessmentData({
             ...assessmentData,
             strongSkills: user.skill_analysis.stronger_skills,
             weakSkills: user.skill_analysis.weaker_skills,
             overallScore: user.score
         })
-        // console.log('❤️👌assessment data : ', assessmentData)
+         console.log('❤️👌assessment data : ', assessmentData)
     }, [user]);
 
     const skillComparison = [

@@ -731,7 +731,7 @@ const InterviewSessionUI = () => {
             try {
                 console.log("📡 Fetching interview questions...");
                 const response = await fetch(
-                    `http://localhost:3000/api/interview/${domain}`,
+                    `http://localhost:3000/api/interview/domain?domain=${domain}`,
                     {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem("token")}`,

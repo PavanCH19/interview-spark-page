@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const Overview = ({ user, isEditing }) => {
-    console.log(user)
+    const [score, setScore] = useState(0);
+
     // Mock data (same as before)
     const [assessmentData, setAssessmentData] = useState({
-        overallScore: 78,
+        overallScore: 0,
         weakSkills: ['System Design', 'SQL Optimization', 'Docker'],
         strongSkills: ['React', 'JavaScript', 'Communication']
     });
@@ -16,14 +17,14 @@ const Overview = ({ user, isEditing }) => {
     const [sessions, setSessions] = useState([]);
 
     useEffect(() => {
-        setAssessmentData({
-            ...assessmentData,
-            strongSkills: user.skill_analysis.stronger_skills,
-            weakSkills: user.skill_analysis.weaker_skills,
-            overallScore: user.score
-        })
-         console.log('❤️👌assessment data : ', assessmentData)
-    }, [user]);
+        setAssessmentData(prev => ({
+            ...prev,
+            strongSkills: user.skill_analysis.stronger_skills || prev.strongSkills,
+            weakSkills: user.skill_analysis.weaker_skills || prev.weakSkills,
+            overallScore: score
+        }))
+        console.log('❤️👌assessment data : ', assessmentData)
+    }, [user, score]);
 
     // Fetch sessions data and process skill comparison
     useEffect(() => {
@@ -34,11 +35,12 @@ const Overview = ({ user, isEditing }) => {
                         Authorization: localStorage.getItem('token')
                     }
                 });
-
+                console.log('Fetched sessions response:', response);
                 if (response.status === 200 && response.data.success) {
                     const sessionsData = response.data.sessions || [];
                     setSessions(sessionsData);
-                    
+                    console.log('⚠️⚠️', response.data.sessions[0].score)
+                    setScore(response.data.sessions[0].score || 0);
                     // Process skill data from all sessions
                     const skillMap = new Map();
                     const skillCounts = new Map();
@@ -46,7 +48,7 @@ const Overview = ({ user, isEditing }) => {
                     // Aggregate skills from all sessions
                     sessionsData.forEach(session => {
                         const skillAverages = session.skill_analysis?.skill_averages || {};
-                        
+
                         Object.entries(skillAverages).forEach(([skillName, score]) => {
                             if (skillMap.has(skillName)) {
                                 skillMap.set(skillName, skillMap.get(skillName) + score);
@@ -63,11 +65,11 @@ const Overview = ({ user, isEditing }) => {
                         .map(([skillName, totalScore]) => {
                             const count = skillCounts.get(skillName);
                             const averageScore = count > 0 ? (totalScore / count) : 0;
-                            
+
                             // Check if scores are already in percentage (0-100) or need conversion (0-10 scale)
                             // If average is > 10, assume it's already a percentage, otherwise multiply by 10
                             const userScore = averageScore > 10 ? Math.round(averageScore) : Math.round(averageScore * 10);
-                            
+
                             return {
                                 skill: skillName,
                                 user: Math.min(100, Math.max(0, userScore)), // Clamp between 0-100

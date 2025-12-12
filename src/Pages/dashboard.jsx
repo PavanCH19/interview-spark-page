@@ -31,8 +31,8 @@ const useStore = () => {
             "SQL",
             "System Design",
         ],
-        score : 0,
-        skill_analysis : userData.interview_sessions?.[0].skill_analysis ||'',
+        score: userData?.score || 0,
+        skill_analysis: userData.interview_sessions?.[0].skill_analysis || '',
         education: userEducation[0]?.college || "BS Computer Science - Stanford University",
         careerPath: userProfile?.careerPath || "Software Engineering",
         suggestedPath: userProfile?.suggestedPath || "Technical Lead",
@@ -188,7 +188,7 @@ const Dashboard = () => {
         navigate('/auth');
     }
 
-    
+
     useEffect(() => {
         const userDetails = async () => {
             setIsLoading(true)
@@ -208,7 +208,7 @@ const Dashboard = () => {
                     email: data.profile?.email,
                     location: data.profile?.location,
                     skills: data.skills,
-                    skill_analysis : data.skill_analysis,
+                    skill_analysis: data.skill_analysis,
                     score: data.score
                 }))
                 setIsLoading(false)
@@ -276,7 +276,7 @@ const Dashboard = () => {
     return (
         <div className="flex h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 overflow-hidden">
             {/* Sidebar */}
-            
+
 
             {sidebarOpen && (
                 <aside
@@ -429,7 +429,7 @@ const Dashboard = () => {
                         </div>
                     )}
 
-    {activeTab === 'overview' && !isLoading ? (<Overview user={user} isEditing={isEditing} />) : null}
+                    {activeTab === 'overview' && !isLoading ? (<Overview user={user} isEditing={isEditing} />) : null}
 
 
                     {activeTab === 'interviews' && <DashInterviews />}

@@ -36,34 +36,34 @@ const DashInterviews = () => {
         }
     }
 
-    useEffect(()=>{
+    useEffect(() => {
         console.log("😂😍😍")
         console.log(sessions)
-    },[sessions])
+    }, [sessions])
 
-    useEffect(()=>{
-        const getSessions = async ()=>{
-            const response = await axios.get('http://localhost:3000/api/interview/recent-sessions',{
-                headers : {
-                    Authorization : localStorage.getItem('token')
+    useEffect(() => {
+        const getSessions = async () => {
+            const response = await axios.get('http://localhost:3000/api/interview/recent-sessions', {
+                headers: {
+                    Authorization: localStorage.getItem('token')
                 }
             })
-            if(response.status !==200){
+            if (response.status !== 200) {
                 console.error('response failed')
             }
-            else{
+            else {
                 console.log("sessions array")
                 console.log(response.data.sessions)
                 const sessions = response.data.sessions;
                 setSessions(sessions);
-                const sessionDataForUI = sessions.map((session)=>{
+                const sessionDataForUI = sessions.map((session) => {
                     return {
-                        id : session._id,
-                        date : session.completedAt.slice(0,10),
-                        domain : session.domain,
-                        score : session.score,
-                        type : session.session_type,
-                        status : session.status
+                        id: session._id,
+                        date: session.completedAt.slice(0, 10),
+                        domain: session.domain,
+                        score: session.score,
+                        type: session.session_type,
+                        status: session.status
                     }
                 })
                 console.log("filtered data")
@@ -73,7 +73,7 @@ const DashInterviews = () => {
         }
 
         getSessions();
-    },[])
+    }, [])
 
     return (
         <>
@@ -86,7 +86,7 @@ const DashInterviews = () => {
                         {/* start interview button */}
                         <button className="px-8 py-3 bg-white text-indigo-600 hover:bg-gray-100 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg hover:shadow-xl"
                             onClick={() => {
-                                navigate('/interview', {state : {domain : "ai_ml"}})
+                                navigate('/interview', { state: { domain: "ai_ml" } })
                             }}
                         >
                             <Play className="w-5 h-5" />
@@ -143,7 +143,7 @@ const DashInterviews = () => {
                                     {/* Button */}
                                     <Link className="mt-4 w-full py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow hover:shadow-lg hover:scale-[1.03] transition"
                                         to='/interview'
-                                        state={{domain : session.endpoint}}
+                                        state={{ domain: session.endpoint }}
                                     >
                                         <Play className="w-4 h-4" />
                                         Resume
@@ -206,17 +206,17 @@ const DashInterviews = () => {
                                 ))}
                             </tbody>
                         </table>
-                        
+
                     </div>
                 </div>
                 {showSession && selectedSession && (
-                    <RecentSession 
+                    <RecentSession
                         setIsOpen={() => {
                             setShowSession(false);
                             setSelectedSession(null);
-                        }} 
-                        isOpen={showSession} 
-                        session={selectedSession} 
+                        }}
+                        isOpen={showSession}
+                        session={selectedSession}
                     />
                 )}
             </div>

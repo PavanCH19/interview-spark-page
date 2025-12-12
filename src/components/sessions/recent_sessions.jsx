@@ -14,7 +14,7 @@ import {
 
 const RecentSession = ({ isOpen, setIsOpen, session }) => {
   if (!isOpen || !session) return null;
-  console.log('✨✨',session)
+  console.log('✨✨', session)
 
   // ---------------------------
   // SKILL CONVERSION (MATCHES COMMENTED UI)
@@ -40,7 +40,7 @@ const RecentSession = ({ isOpen, setIsOpen, session }) => {
   // Use useMemo to ensure data is properly computed when session changes
   const data = useMemo(() => {
     const skillAnalysis = convertSkills(session?.skill_analysis?.skill_averages || {});
-    
+
     return {
       domain: session?.domain || "Unknown",
       session_number: session?.session_number || 1,
@@ -50,7 +50,7 @@ const RecentSession = ({ isOpen, setIsOpen, session }) => {
         mcq_attempted: 0,
         voice_attempted: 0,
         coding_attempted: 0,
-        overall_average: session?.score || 0,
+        overall_average: session?.score > 10 ? Math.round(session?.score) : Math.round((session?.score || 0) * 10),
       },
       skill_analysis: skillAnalysis,
       top_skills: session?.skill_analysis?.stronger_skills || [],

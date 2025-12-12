@@ -114,7 +114,7 @@ const TestResultsDashboard = () => {
 
         {/* Questions Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {data.results.map((result, idx) => (
+          {data.results.map((result) => (
             <div
               key={result.qid}
               onClick={() => setSelectedQuestion(result)}
@@ -136,7 +136,7 @@ const TestResultsDashboard = () => {
                   </span>
                 ) : result.question_type === 'voice' ? (
                   <span className="text-2xl font-bold text-blue-500">
-                    {result.evaluation.voice_analysis?.result?.confidence?.confidence_score_percent?.toFixed(0) || 0}%
+                    {result.evaluation.voice_analysis?.confidence?.confidence_score_percent?.toFixed(0) || 0}%
                   </span>
                 ) : (
                   result.evaluation.correct ?
@@ -178,18 +178,18 @@ const TestResultsDashboard = () => {
 
               {result.question_type === 'voice' && (
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-700 italic">"{result.evaluation.voice_analysis?.result?.transcription?.transcript || "No transcription available"}"</p>
+                  <p className="text-sm text-gray-700 italic">"{result.evaluation.voice_analysis?.transcription?.transcript || "No transcription available"}"</p>
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     <div className="bg-blue-50 rounded-lg p-2">
                       <p className="text-xs text-gray-600">Clarity</p>
                       <p className="text-lg font-bold text-blue-600">
-                        {result.evaluation.voice_analysis?.result?.clarity?.clarity_score_percent?.toFixed(0) || 0}%
+                        {result.evaluation.voice_analysis?.clarity?.clarity_score_percent?.toFixed(0) || 0}%
                       </p>
                     </div>
                     <div className="bg-purple-50 rounded-lg p-2">
                       <p className="text-xs text-gray-600">WPM</p>
                       <p className="text-lg font-bold text-purple-600">
-                        {result.evaluation.voice_analysis?.result?.speech_rate?.words_per_minute_actual?.toFixed(0) || 0}
+                        {result.evaluation.voice_analysis?.speech_rate?.words_per_minute_estimated?.toFixed(0) || 0}
                       </p>
                     </div>
                   </div>
@@ -282,45 +282,45 @@ const TestResultsDashboard = () => {
                   <div className="space-y-6">
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <h3 className="font-semibold text-gray-800 mb-2">Transcription</h3>
-                      <p className="text-gray-700 italic">"{selectedQuestion.evaluation.voice_analysis?.result?.transcription?.transcript || "No transcription available"}"</p>
-                      <p className="text-sm text-gray-600 mt-2">Word Count: {selectedQuestion.evaluation.voice_analysis?.result?.transcription?.word_count || 0}</p>
+                      <p className="text-gray-700 italic">"{selectedQuestion.evaluation.voice_analysis?.transcription?.transcript || "No transcription available"}"</p>
+                      <p className="text-sm text-gray-600 mt-2">Word Count: {selectedQuestion.evaluation.voice_analysis?.transcription?.word_count || 0}</p>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
                         <p className="text-xs text-gray-600 mb-1">Clarity</p>
                         <p className="text-2xl font-bold text-green-600">
-                          {selectedQuestion.evaluation.voice_analysis?.result?.clarity?.clarity_score_percent?.toFixed(1) || 0}%
+                          {selectedQuestion.evaluation.voice_analysis?.clarity?.clarity_score_percent?.toFixed(1) || 0}%
                         </p>
                       </div>
                       <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
                         <p className="text-xs text-gray-600 mb-1">Confidence</p>
                         <p className="text-2xl font-bold text-blue-600">
-                          {selectedQuestion.evaluation.voice_analysis?.result?.confidence?.confidence_score_percent?.toFixed(1) || 0}%
+                          {selectedQuestion.evaluation.voice_analysis?.confidence?.confidence_score_percent?.toFixed(1) || 0}%
                         </p>
                       </div>
                       <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
                         <p className="text-xs text-gray-600 mb-1">WPM</p>
                         <p className="text-2xl font-bold text-purple-600">
-                          {selectedQuestion.evaluation.voice_analysis?.result?.speech_rate?.words_per_minute_actual?.toFixed(0) || 0}
+                          {selectedQuestion.evaluation.voice_analysis?.speech_rate?.words_per_minute_estimated?.toFixed(0) || 0}
                         </p>
                       </div>
                       <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
                         <p className="text-xs text-gray-600 mb-1">Speech Ratio</p>
                         <p className="text-2xl font-bold text-orange-600">
-                          {selectedQuestion.evaluation.voice_analysis?.result?.silence_metrics?.speech_ratio_percent?.toFixed(1) || 0}%
+                          {selectedQuestion.evaluation.voice_analysis?.silence_metrics?.speech_ratio_percent?.toFixed(1) || 0}%
                         </p>
                       </div>
                       <div className="bg-gradient-to-br from-pink-50 to-pink-100 p-4 rounded-lg">
                         <p className="text-xs text-gray-600 mb-1">Pitch (Hz)</p>
                         <p className="text-2xl font-bold text-pink-600">
-                          {selectedQuestion.evaluation.voice_analysis?.result?.pitch_variation?.mean_pitch_hz?.toFixed(0) || 0}
+                          {selectedQuestion.evaluation.voice_analysis?.pitch_variation?.mean_pitch_hz?.toFixed(0) || 0}
                         </p>
                       </div>
                       <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-4 rounded-lg">
                         <p className="text-xs text-gray-600 mb-1">Duration</p>
                         <p className="text-2xl font-bold text-indigo-600">
-                          {selectedQuestion.evaluation.voice_analysis?.result?.silence_metrics?.total_duration_seconds || 0}s
+                          {selectedQuestion.evaluation.voice_analysis?.speech_rate?.speaking_time_seconds?.toFixed(1) || 0}s
                         </p>
                       </div>
                     </div>

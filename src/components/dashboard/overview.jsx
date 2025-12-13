@@ -3,7 +3,7 @@ import { User, BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Za
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const Overview = ({ user, isEditing }) => {
+const Overview = ({ user, isEditing, setIsEditing, editedUser, setEditedUser, saveProfile, resetProfile }) => {
     const [score, setScore] = useState(0);
 
     // Mock data (same as before)
@@ -52,6 +52,21 @@ const Overview = ({ user, isEditing }) => {
     });
     const [loading, setLoading] = useState(false);
 
+    // Sync editedUser when entering edit mode
+    useEffect(() => {
+        if (isEditing) {
+            // Ensure editedUser is synced with current user when entering edit mode
+            setEditedUser(prev => ({
+                ...user,
+                phone: user.phone || prev?.phone || '',
+                github: user.github || prev?.github || '',
+                linkedin: user.linkedin || prev?.linkedin || '',
+                email: user.email || prev?.email || '',
+                name: user.name || prev?.name || ''
+            }));
+        }
+    }, [isEditing]);
+
     // Fetch sessions data and process skill comparison
     useEffect(() => {
         const fetchSessions = async () => {
@@ -65,8 +80,8 @@ const Overview = ({ user, isEditing }) => {
                 if (response.status === 200 && response.data.success) {
                     const sessionsData = response.data.sessions || [];
                     setSessions(sessionsData);
-                    console.log('⚠️⚠️', response.data.sessions[response.data.sessions.length - 1].score)
-                    setScore(response.data.sessions[response.data.sessions.length - 1].score / 5 * 100 || 0);
+                    console.log('⚠️⚠️', response.data.sessions[0].score)
+                    setScore(response.data.sessions[0].score || 0);
                     // Process skill data from all sessions
                     const skillMap = new Map();
                     const skillCounts = new Map();
@@ -410,8 +425,8 @@ const Overview = ({ user, isEditing }) => {
                             <label className="text-sm font-semibold text-gray-600 mb-2 block">Full Name</label>
                             <input
                                 type="text"
-                                value={isEditing ? editedUser.name : user.name}
-                                onChange={(e) => setEditedUser({ ...editedUser, name: e.target.value })}
+                                value={isEditing ? (editedUser?.name || '') : (user.name || '')}
+                                onChange={(e) => setEditedUser({ ...(editedUser || user), name: e.target.value })}
                                 disabled={!isEditing}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl 
                 focus:ring-2 focus:ring-indigo-500 focus:border-transparent 
@@ -424,8 +439,8 @@ const Overview = ({ user, isEditing }) => {
                             <label className="text-sm font-semibold text-gray-600 mb-2 block">Email</label>
                             <input
                                 type="email"
-                                value={isEditing ? editedUser.email : user.email}   // UPDATED
-                                onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })} // UPDATED
+                                value={isEditing ? (editedUser?.email || '') : (user.email || '')}
+                                onChange={(e) => setEditedUser({ ...(editedUser || user), email: e.target.value })}
                                 disabled={!isEditing}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl 
                 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 font-medium"
@@ -437,8 +452,8 @@ const Overview = ({ user, isEditing }) => {
                             <label className="text-sm font-semibold text-gray-600 mb-2 block">Phone Number</label>
                             <input
                                 type="text"
-                                value={isEditing ? editedUser.phone : user.phone} // UPDATED
-                                onChange={(e) => setEditedUser({ ...editedUser, phone: e.target.value })} // UPDATED
+                                value={isEditing ? (editedUser?.phone || '') : (user.phone || '')}
+                                onChange={(e) => setEditedUser({ ...(editedUser || user), phone: e.target.value })}
                                 disabled={!isEditing}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl 
                 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 font-medium"
@@ -450,8 +465,8 @@ const Overview = ({ user, isEditing }) => {
                             <label className="text-sm font-semibold text-gray-600 mb-2 block">GitHub</label>
                             <input
                                 type="text"
-                                value={isEditing ? editedUser.github : user.github} // UPDATED
-                                onChange={(e) => setEditedUser({ ...editedUser, github: e.target.value })} // UPDATED
+                                value={isEditing ? (editedUser?.github || '') : (user.github || '')}
+                                onChange={(e) => setEditedUser({ ...(editedUser || user), github: e.target.value })}
                                 disabled={!isEditing}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl 
                 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 font-medium"
@@ -463,8 +478,8 @@ const Overview = ({ user, isEditing }) => {
                             <label className="text-sm font-semibold text-gray-600 mb-2 block">LinkedIn</label>
                             <input
                                 type="text"
-                                value={isEditing ? editedUser.linkedin : user.linkedin} // UPDATED
-                                onChange={(e) => setEditedUser({ ...editedUser, linkedin: e.target.value })} // UPDATED
+                                value={isEditing ? (editedUser?.linkedin || '') : (user.linkedin || '')}
+                                onChange={(e) => setEditedUser({ ...(editedUser || user), linkedin: e.target.value })}
                                 disabled={!isEditing}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl 
                 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 font-medium"

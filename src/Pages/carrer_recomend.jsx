@@ -9,6 +9,7 @@ import {
     Star, AlertCircle, Download, Sparkles, Trophy, Brain, XCircle,
     ThumbsUp, ThumbsDown, Lightbulb, BookMarked, Briefcase, FolderOpen
 } from 'lucide-react';
+import { Notification } from '../components/Notifications';
 
 // Circular Progress Component
 const CircularProgress = ({ percentage, size = 200, label = "Overall Match" }) => {
@@ -261,6 +262,7 @@ const AlternativeDomains = ({ suggestions, onSelectDomain }) => {
         return 'from-purple-400 to-pink-500';
     };
 
+
     const getRankBadge = (rank) => {
         if (rank === 1) return '🥇';
         if (rank === 2) return '🥈';
@@ -464,9 +466,22 @@ const DecisionModal = ({ show, onClose, children }) => {
 
 import { useNavigate } from 'react-router-dom';
 
-const CareerDecision = ({ onSwitchPath }) => {
+const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) => {
     const [showModal, setShowModal] = useState(false);
+    const [domainSelected, setDomainSelected] = useState(false);
     const navigate = useNavigate();
+    const onSwitchPath = (domain)=>{
+        console.log(" 🤣domain", domain)
+    }
+    useEffect(()=>{
+        if(selectedDomain !==''){
+            setDomainSelected(true);
+        }
+        else{
+            setDomainSelected(false)
+        }
+        console.log("👋", domainSelected)
+    },[domainSelected, selectedDomain])
 
     // Modal helper component that renders to document.body so backdrop covers entire viewport
     const Modal = ({ show, onClose, children }) => {
@@ -519,7 +534,16 @@ const CareerDecision = ({ onSwitchPath }) => {
                     </button>
 
                     <button
-                        onClick={() => setShowModal(true)}
+                        onClick={() => {
+                            setShowModal(true)
+                            if(!domainSelected){
+                                setNotification({
+                                    message : 'Domain Not Selected' ,
+                                    type : 'warning'
+                                })
+                                setIsNotification(true);
+                            }    
+                        }}
                         className="flex-1 flex items-center justify-center gap-3 px-8 py-5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold text-lg rounded-2xl hover:shadow-2xl hover:scale-105 transition-all animate-pulse-slow"
                     >
                         <Star className="w-6 h-6" />
@@ -531,7 +555,7 @@ const CareerDecision = ({ onSwitchPath }) => {
                 <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
                     <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-                        Confirm Path Switch
+                        {domainSelected? `Confirm Switch to ${selectedDomain}` : "Select the Domain"}
                     </h3>
                     <p className="text-gray-600 mb-6 text-center">
                         Switching will update your profile and learning plan. Continue?
@@ -540,15 +564,24 @@ const CareerDecision = ({ onSwitchPath }) => {
                     <div className="flex gap-3">
                         <button
                             onClick={() => setShowModal(false)}
-                            className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100"
+                            className={domainSelected?`flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100` : 
+                                `flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 
+                                text-white font-semibold rounded-xl 
+                                hover:shadow-xl
+                                disabled:from-gray-400 disabled:to-gray-500
+                                disabled:text-gray-200
+                                disabled:cursor-not-allowed
+                                disabled:shadow-none
+                                disabled:opacity-70`}
                         >
-                            Cancel
+                            {!domainSelected?"Select Domain" : "Cancel"}
                         </button>
                         <button
                             onClick={() => {
                                 setShowModal(false);
-                                onSwitchPath();
+                                onSwitchPath(selectedDomain);
                             }}
+                            disabled={!domainSelected}
                             className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:shadow-xl"
                         >
                             Confirm Switch
@@ -863,6 +896,17 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
         ]
     };
 
+    const [selectedAltDom, setSelectedAltDom] = useState("");
+    const [isNotification, setIsNotification] = useState(false);
+    const [notification, setNotification] = useState({
+        message : '',
+        type : ''
+    })
+
+    useEffect(()=>{
+        console.log("🤝", selectedAltDom);
+    },[selectedAltDom])
+
     const results = assessmentTestResults || [
         {
             question_id: 1,
@@ -950,6 +994,14 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
                     summary={summary}
                 />
 
+            {isNotification && (
+                <Notification
+                message={notification.message}
+                type={notification.type}
+                duration={4000}
+                onClose={() => setNotification({ message: '', type: '' })}
+            />
+            )}
 
                 {/* Performance Metrics */}
                 <FeatureSummary features={assessmentData.feature_summary} />
@@ -966,7 +1018,10 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
                 {assessmentData.alternative_domain_suggestions?.length > 0 && (
                     <AlternativeDomains
                         suggestions={assessmentData.alternative_domain_suggestions}
-                        onSelectDomain={(domain) => alert(`Selected: ${domain.domain}`)}
+                        onSelectDomain={(domain) => {
+                            // alert(`Selected: ${domain.domain}`);
+                            setSelectedAltDom(domain.domain)
+                        }}
                     />
                 )}
 
@@ -1006,7 +1061,9 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
 
 
                 {/* Career Decision */}
-                <CareerDecision />
+                <CareerDecision selectedDomain={selectedAltDom} setNotification={setNotification}
+                    setIsNotification={setIsNotification}    
+                />
 
                 {/* Motivational Footer */}
                 <div className="text-center py-12">

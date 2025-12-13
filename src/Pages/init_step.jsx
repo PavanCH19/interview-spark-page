@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { CheckCircle, Circle, Loader2, Brain, Target, TrendingUp } from 'lucide-react';
 import DomainCompanySelector from './dom_com_selection';
 import MockSessionPlayer from './mock_session';
@@ -8,7 +9,10 @@ import axios from 'axios';
 import CareerRecommendationDashboard from "./carrer_recomend"
 
 const CareerAssessmentFlow = () => {
-    const [currentStep, setCurrentStep] = useState(0);
+    const location = useLocation();
+    const startFromStep = location.state?.startFromStep ?? 0;
+    const skipToDomainSelection = startFromStep >= 2; // For backward compatibility
+    const [currentStep, setCurrentStep] = useState(startFromStep);
     const [collectedData, setCollectedData] = useState({});
     const [isProcessing, setIsProcessing] = useState(false);
     const [processingStep, setProcessingStep] = useState('');
@@ -195,14 +199,22 @@ const CareerAssessmentFlow = () => {
                                     return (
                                         <div key={step.id} className="flex flex-col items-center relative z-10">
                                             <button
-                                                onClick={() => index < currentStep && setCurrentStep(index)}
-                                                disabled={index > currentStep}
+                                                onClick={() => {
+                                                    // Prevent navigation to skipped steps when skipToDomainSelection is true
+                                                    if (skipToDomainSelection && index < 2) {
+                                                        return;
+                                                    }
+                                                    if (index < currentStep) {
+                                                        setCurrentStep(index);
+                                                    }
+                                                }}
+                                                disabled={index > currentStep || (skipToDomainSelection && index < 2)}
                                                 className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold transition-all duration-300 transform hover:scale-110 ${isCompleted
                                                     ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg'
                                                     : isCurrent
                                                         ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl animate-pulse-slow'
                                                         : 'bg-white border-4 border-gray-300 text-gray-400'
-                                                    } ${index < currentStep ? 'cursor-pointer' : ''}`}
+                                                    } ${index < currentStep && !(skipToDomainSelection && index < 2) ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                                             >
                                                 {isCompleted ? (
                                                     <CheckCircle className="w-5 h-5 md:w-6 md:h-6" />

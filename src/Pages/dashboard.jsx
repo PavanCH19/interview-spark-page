@@ -22,6 +22,7 @@ const useStore = () => {
     const [user, setUser] = useState({
         name: userProfile?.name || "",
         email: userData?.user?.email || "",
+        phone: userProfile?.phone || "",
         title: userProfile?.title || "Senior Software Engineer",
         experience: userProfile?.experience || "5 years",
         location: userProfile?.location || "",
@@ -53,9 +54,37 @@ const useStore = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [sidebarWidth, setSidebarWidth] = useState(280);
 
-    const saveProfile = () => {
-        setUser(editedUser);
-        setIsEditing(false);
+    const saveProfile = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            // Prepare the data to send to the API
+            const profileData = {
+                profile: {
+                    name: editedUser.name,
+                    email: editedUser.email,
+                    phone: editedUser.phone || '',
+                    location: editedUser.location || '',
+                    github: editedUser.github || '',
+                    linkedin: editedUser.linkedin || ''
+                }
+            };
+
+            const response = await axios.post('http://localhost:3000/api/auth/updateUserDetails', profileData, {
+                headers: {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 200) {
+                setUser(editedUser);
+                setIsEditing(false);
+                console.log('Profile updated successfully');
+            }
+        } catch (error) {
+            console.error('Error saving profile:', error);
+            alert('Failed to save profile. Please try again.');
+        }
     };
 
     const resetProfile = () => {
@@ -128,8 +157,7 @@ const skillGrowth = [
 
 
 const Dashboard = () => {
-    //  setIsEditing, editedUser, setEditedUser, saveProfile, resetProfile, 
-    const { user, setUser, isEditing, sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth } = useStore();
+    const { user, setUser, isEditing, setIsEditing, editedUser, setEditedUser, saveProfile, resetProfile, sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth } = useStore();
     const [activeTab, setActiveTab] = useState('overview');
     const [isResizing, setIsResizing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -206,6 +234,7 @@ const Dashboard = () => {
                     ...prev,
                     name: data.profile?.name,
                     email: data.profile?.email,
+                    phone: data.profile?.phone || '',
                     location: data.profile?.location,
                     github : data.profile?.github||'',
                     linkedin : data.profile?.linkedin || '',
@@ -408,7 +437,17 @@ const Dashboard = () => {
                 {/* Scrollable Main Content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
 
-                    {activeTab === 'overview' && !isLoading ? (<Overview user={user} isEditing={isEditing} />) : null}
+                    {activeTab === 'overview' && !isLoading ? (
+                        <Overview 
+                            user={user} 
+                            isEditing={isEditing} 
+                            setIsEditing={setIsEditing}
+                            editedUser={editedUser}
+                            setEditedUser={setEditedUser}
+                            saveProfile={saveProfile}
+                            resetProfile={resetProfile}
+                        />
+                    ) : null}
 
 
                     {activeTab === 'interviews' && !isLoading && <DashInterviews target_domains={user.target_domains}/>}

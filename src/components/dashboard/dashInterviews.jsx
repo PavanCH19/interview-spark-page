@@ -113,7 +113,7 @@ const DashInterviews = ({ target_domains }) => {
                         {/* start interview button */}
                         <button className="px-8 py-3 bg-white text-indigo-600 hover:bg-gray-100 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg hover:shadow-xl"
                             onClick={() => {
-                                navigate('/setup')
+                                navigate('/setup', { state: { startFromStep: 1 } })
                             }}
                         >
                             <Play className="w-5 h-5" />

@@ -571,7 +571,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     Search, ChevronDown, X, TrendingUp,
-    Code, ArrowRight
+    Code, ArrowRight, Gamepad2, Coffee, Code2, Boxes, Braces, Atom, Smartphone
 
 } from 'lucide-react';
 
@@ -592,16 +592,26 @@ const DomainCompanySelector = ({ onComplete, onDataSubmit }) => {
     const domains = [
         { id: 1, name: 'Data Science', icon: Database, color: 'from-orange-400 to-red-400', trend: true },
         { id: 2, name: 'Web Development', icon: Globe, color: 'from-indigo-400 to-purple-400', trend: true },
-        { id: 3, name: 'Mobile Development', icon: Briefcase, color: 'from-pink-400 to-purple-400', trend: false },
-        { id: 4, name: 'Devops', icon: Zap, color: 'from-yellow-400 to-orange-400', trend: true },
+        { id: 3, name: 'Mobile Development', icon: Smartphone, color: 'from-pink-400 to-purple-400', trend: false },
+
+        { id: 4, name: 'DevOps', icon: Zap, color: 'from-yellow-400 to-orange-400', trend: true },
         { id: 5, name: 'Cybersecurity', icon: Shield, color: 'from-red-400 to-rose-400', trend: true },
-        { id: 6, name: 'Ai Ml', icon: Cpu, color: 'from-purple-400 to-pink-400', trend: true },
+        { id: 6, name: 'AI ML', icon: Cpu, color: 'from-purple-400 to-pink-400', trend: true },
         { id: 7, name: 'Cloud Computing', icon: Cloud, color: 'from-sky-400 to-blue-400', trend: true },
+
         { id: 8, name: 'Blockchain Development', icon: Target, color: 'from-emerald-400 to-green-400', trend: false },
-        { id: 9, name: 'Game Development', icon: Zap, color: 'from-indigo-400 to-violet-400', trend: false },
+        { id: 9, name: 'Game Development', icon: Gamepad2, color: 'from-indigo-400 to-violet-400', trend: false },
         { id: 10, name: 'Embedded Systems', icon: Server, color: 'from-blue-400 to-cyan-400', trend: false },
-        { id: 11, name: 'ar_vr_development', icon: Sparkles, color: 'from-fuchsia-400 to-pink-500', trend: true },
-        { id: 12, name: 'ui_ux_design', icon: Check, color: 'from-teal-400 to-green-400', trend: true }
+
+        { id: 11, name: 'AR VR Development', icon: Sparkles, color: 'from-fuchsia-400 to-pink-500', trend: true },
+        { id: 12, name: 'UI UX Design', icon: Check, color: 'from-teal-400 to-green-400', trend: true },
+
+        // 🔥 LANGUAGE / FRAMEWORK DOMAINS
+        { id: 13, name: 'Java Development', icon: Coffee, color: 'from-red-500 to-orange-500', trend: true },
+        { id: 14, name: 'Python Development', icon: Code2, color: 'from-yellow-400 to-amber-400', trend: true },
+        { id: 15, name: 'Node.js Development', icon: Boxes, color: 'from-green-500 to-emerald-500', trend: true },
+        { id: 16, name: 'JavaScript Development', icon: Braces, color: 'from-yellow-300 to-yellow-500', trend: true },
+        { id: 17, name: 'React Development', icon: Atom, color: 'from-cyan-400 to-sky-500', trend: true }
     ];
 
     // Company data

@@ -255,12 +255,21 @@ const FeatureSummary = ({ features }) => {
 };
 
 // Alternative Domains Component
-const AlternativeDomains = ({ suggestions, onSelectDomain }) => {
+const AlternativeDomains = ({ suggestions, setSelectedAltDom, selectedAltDom }) => {
+
+    const [selectedSuggestion, setSelectedSugggestion] = useState(false);
+    const onSelectDomain=(domain) => {
+        setSelectedAltDom(domain.domain)
+        setSelectedSugggestion(true);
+    }
+    
+
     const getRankColor = (rank) => {
         if (rank === 1) return 'from-yellow-400 to-orange-500';
         if (rank === 2) return 'from-blue-400 to-indigo-500';
         return 'from-purple-400 to-pink-500';
     };
+    
 
 
     const getRankBadge = (rank) => {
@@ -268,6 +277,7 @@ const AlternativeDomains = ({ suggestions, onSelectDomain }) => {
         if (rank === 2) return '🥈';
         return '🥉';
     };
+    
 
     return (
         <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 border border-white/50">
@@ -280,7 +290,7 @@ const AlternativeDomains = ({ suggestions, onSelectDomain }) => {
                 {suggestions.map((suggestion, idx) => (
                     <div
                         key={idx}
-                        className="group bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border-2 border-gray-200 hover:border-purple-400 transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer"
+                        className={`group ${(selectedAltDom === suggestion.domain)? "border-purple-400 border-3":''} bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border-2 border-gray-200  transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer`}
                     >
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-2">
@@ -472,6 +482,9 @@ const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) =
     const navigate = useNavigate();
     const onSwitchPath = (domain)=>{
         console.log(" 🤣domain", domain)
+        if(domainSelected){
+            navigate('/dashboard')
+        }
     }
     useEffect(()=>{
         if(selectedDomain !==''){
@@ -482,6 +495,17 @@ const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) =
         }
         console.log("👋", domainSelected)
     },[domainSelected, selectedDomain])
+
+    const handleSwitchPath = ()=>{
+            setShowModal(true)
+            if(!domainSelected){
+                setNotification({
+                    message : 'Domain Not Selected',
+                    type : 'warning'
+                })
+                setIsNotification(true);
+            }            
+    }
 
     // Modal helper component that renders to document.body so backdrop covers entire viewport
     const Modal = ({ show, onClose, children }) => {
@@ -534,16 +558,7 @@ const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) =
                     </button>
 
                     <button
-                        onClick={() => {
-                            setShowModal(true)
-                            if(!domainSelected){
-                                setNotification({
-                                    message : 'Domain Not Selected' ,
-                                    type : 'warning'
-                                })
-                                setIsNotification(true);
-                            }    
-                        }}
+                        onClick={handleSwitchPath}
                         className="flex-1 flex items-center justify-center gap-3 px-8 py-5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold text-lg rounded-2xl hover:shadow-2xl hover:scale-105 transition-all animate-pulse-slow"
                     >
                         <Star className="w-6 h-6" />
@@ -564,15 +579,7 @@ const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) =
                     <div className="flex gap-3">
                         <button
                             onClick={() => setShowModal(false)}
-                            className={domainSelected?`flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100` : 
-                                `flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 
-                                text-white font-semibold rounded-xl 
-                                hover:shadow-xl
-                                disabled:from-gray-400 disabled:to-gray-500
-                                disabled:text-gray-200
-                                disabled:cursor-not-allowed
-                                disabled:shadow-none
-                                disabled:opacity-70`}
+                            className={`${!domainSelected? "curosr-not-allowed":"cursor-pointer"} flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100`}
                         >
                             {!domainSelected?"Select Domain" : "Cancel"}
                         </button>
@@ -582,7 +589,7 @@ const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) =
                                 onSwitchPath(selectedDomain);
                             }}
                             disabled={!domainSelected}
-                            className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:shadow-xl"
+                            className={`flex-1 ${domainSelected? "hover:cursor-pointer" : "hover:cursor-not-allowed"} px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:shadow-xl`}
                         >
                             Confirm Switch
                         </button>
@@ -1018,10 +1025,8 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
                 {assessmentData.alternative_domain_suggestions?.length > 0 && (
                     <AlternativeDomains
                         suggestions={assessmentData.alternative_domain_suggestions}
-                        onSelectDomain={(domain) => {
-                            // alert(`Selected: ${domain.domain}`);
-                            setSelectedAltDom(domain.domain)
-                        }}
+                        selectedAltDom={selectedAltDom}
+                        setSelectedAltDom={setSelectedAltDom}
                     />
                 )}
 

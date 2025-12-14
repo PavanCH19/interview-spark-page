@@ -576,6 +576,7 @@ import {
 } from 'lucide-react';
 
 import { Database, Globe, Briefcase, Zap, Shield, Cpu, Cloud, Target, Server, Sparkles, Check } from 'lucide-react';
+import axios from 'axios';
 
 const DomainCompanySelector = ({ onComplete, onDataSubmit }) => {
     const [selectedDomains, setSelectedDomains] = useState([]);
@@ -584,6 +585,12 @@ const DomainCompanySelector = ({ onComplete, onDataSubmit }) => {
     const [companySearch, setCompanySearch] = useState('');
     const [isDomainDropdownOpen, setIsDomainDropdownOpen] = useState(false);
     const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+    const [userDetails, setUserDetails] = useState({});
+    const [domainExists, setDomainExists] = useState({
+        status : false,
+        value : ''
+    })
+
 
     const domainDropdownRef = useRef(null);
     const companyDropdownRef = useRef(null);
@@ -706,6 +713,32 @@ const DomainCompanySelector = ({ onComplete, onDataSubmit }) => {
             onComplete();
         }
     };
+
+    // useEffect(()=>{
+    //     console.log("userDeails : ", userDetails)
+    // }, [userDetails])
+
+    useEffect(()=>{
+        const getUserDetails = async()=>{
+            try {
+                const response = await axios.get("http://localhost:3000/api/auth/getUserDetails",{headers: {
+                    'Authorization': `${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json',
+                }})
+                if(response.status===200){
+                    setUserDetails(response.data.data)
+                }
+                else{
+                    alert("cannot get user")
+                }
+            } catch (error) {
+                alert('error in /getuserdetails')
+                // console.log('🫥Error in getting the user details', error.message)
+            }
+        }
+        getUserDetails();
+        // console.log("got user details from backend", userDetails)
+    },[])
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative rounded-3xl overflow-hidden">

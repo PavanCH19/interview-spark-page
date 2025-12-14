@@ -74,7 +74,8 @@ const Overview = ({ user, isEditing, setIsEditing, editedUser, setEditedUser, sa
                 const response = await axios.get('http://localhost:3000/api/interview/recent-sessions', {
                     headers: {
                         Authorization: localStorage.getItem('token')
-                    }
+                    },
+                    withCredentials: true
                 });
                 console.log('Fetched sessions response:', response);
                 if (response.status === 200 && response.data.success) {
@@ -142,7 +143,8 @@ const Overview = ({ user, isEditing, setIsEditing, editedUser, setEditedUser, sa
                 const response = await axios.get('http://localhost:3000/api/gamification/advanced', {
                     headers: {
                         'Authorization': `${token}`
-                    }
+                    },
+                    withCredentials: true
                 });
 
                 const data = await response.data;
@@ -199,19 +201,25 @@ const Overview = ({ user, isEditing, setIsEditing, editedUser, setEditedUser, sa
     const [altDomains, setAltDomains] = useState([]);
 
     useEffect(() => {
-        const token = localStorage.getItem("token")
-        axios.get('http://localhost:3000/api/setup/alternative-domain-suggestions', {
-            headers: {
-                "Authorization": `${token}`
-            }
-        }).then((res) => {
-            if (res.status === 200) {
-                setAltDomains(res.data.alternative_suggested_domains)
-                console.log('🤣', res.data)
-            }
-        }).catch((err) => {
-            console.log(err)
-        })
+        try {
+            const token = localStorage.getItem("token")
+            axios.get('http://localhost:3000/api/setup/alternative-domain-suggestions', {
+                headers: {
+                    "Authorization": `${token}`
+                },
+                withCredentials: true
+            }).then((res) => {
+                if (res.status === 200) {
+                    setAltDomains(res.data.alternative_suggested_domains)
+                    console.log('🤣', res.data)
+                }
+            }).catch((err) => {
+                console.log('😍😅',err)
+            })
+        } catch (error) {
+            alert("error in alternative domain suggestions")
+            console.log("error in alternative domain suggestions", error.message)
+        }
     }, [])
 
     useEffect(() => {
@@ -478,8 +486,8 @@ const Overview = ({ user, isEditing, setIsEditing, editedUser, setEditedUser, sa
                             <label className="text-sm font-semibold text-gray-600 mb-2 block">LinkedIn</label>
                             <input
                                 type="text"
-                                value={isEditing ? (editedUser?.linkedin || '') : (user.linkedin || '')}
-                                onChange={(e) => setEditedUser({ ...(editedUser || user), linkedin: e.target.value })}
+                                value={isEditing ? editedUser.linkedin : user.linkedin} // UPDATED
+                                onChange={(e) => setEditedUser({ ...editedUser, linkedin: e.target.value })} // UPDATED
                                 disabled={!isEditing}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl 
                 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 font-medium"

@@ -92,6 +92,8 @@ const CareerAssessmentFlow = () => {
                 }
             });
 
+            console.log("💕🤩classify response : ", classifyResponse)
+
             console.log("✅ Classify data successfully sent to backend:", classifyResponse.data);
 
             // Step 3: Navigate with results
@@ -175,6 +177,8 @@ const CareerAssessmentFlow = () => {
             preferred_domain
         };
     };
+
+    
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-3 px-4">
@@ -372,7 +376,7 @@ const CareerAssessmentFlow = () => {
                 </div>
             </div>
 
-            <style jsx>{`
+            <style jsx="true">{`
                 @keyframes fade-in {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }

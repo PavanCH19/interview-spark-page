@@ -26,8 +26,8 @@ const useStore = () => {
         title: userProfile?.title || "Senior Software Engineer",
         experience: userProfile?.experience || "5 years",
         location: userProfile?.location || "",
-        github : '',
-        linkedin : '',
+        github: '',
+        linkedin: '',
         skills: userProfile?.skills || [
             "JavaScript",
             "React",
@@ -37,7 +37,7 @@ const useStore = () => {
             "System Design",
         ],
         score: userData?.score || 0,
-        target_domains : [],
+        target_domains: [],
         skill_analysis: userData.interview_sessions?.[0].skill_analysis || '',
         education: userEducation[0]?.college || "BS Computer Science - Stanford University",
         careerPath: userProfile?.careerPath || "Software Engineering",
@@ -73,7 +73,8 @@ const useStore = () => {
                 headers: {
                     'Authorization': token,
                     'Content-Type': 'application/json'
-                }
+                },
+                withCredentials: true
             });
 
             if (response.status === 200) {
@@ -168,7 +169,8 @@ const Dashboard = () => {
         headers: {
             "Authorization": `Bearer ${localStorage.getItem('token')}`,
             "Content-Type": "application/json"
-        }
+        },
+        withCredentials: true
     })
 
 
@@ -219,40 +221,45 @@ const Dashboard = () => {
 
     useEffect(() => {
         const userDetails = async () => {
-            setIsLoading(true)
-            let response = await api.get("http://localhost:3000/api/auth/getUserDetails")
-            console.log(response)
-            if (response.status === 200) {
-                // console.log("========================")
-                // console.log("below is the fetched data")
-                console.log("❤️ response.data.data",response.data.data)
-                let data = response.data.data
-                // console.log(data)
-                // console.log("profile ; ", data.profile)
-                // console.log("🤣",data.interview_sessions[0].skill_analysis)
-                setUser(prev => ({
-                    ...prev,
-                    name: data.profile?.name,
-                    email: data.profile?.email,
-                    phone: data.profile?.phone || '',
-                    location: data.profile?.location,
-                    github : data.profile?.github||'',
-                    linkedin : data.profile?.linkedin || '',
-                    skills: data.skills,
-                    skill_analysis: data.skill_analysis,
-                    score: data.score || '',
-                    target_domains : data.target_domains || []
-                }))
-                setIsLoading(false)
-            }
-            else {
-                console.error("Unable to fetch data")
+            try {
+                setIsLoading(true)
+                let response = await api.get("http://localhost:3000/api/auth/getUserDetails")
+                console.log(response)
+                if (response.status === 200) {
+                    // console.log("========================")
+                    // console.log("below is the fetched data")
+                    console.log("❤️ response.data.data", response.data.data)
+                    let data = response.data.data
+                    // console.log(data)
+                    // console.log("profile ; ", data.profile)
+                    // console.log("🤣",data.interview_sessions[0].skill_analysis)
+                    setUser(prev => ({
+                        ...prev,
+                        name: data.profile?.name,
+                        email: data.profile?.email,
+                        phone: data.profile?.phone || '',
+                        location: data.profile?.location,
+                        github: data.profile?.github || '',
+                        linkedin: data.profile?.linkedin || '',
+                        skills: data.skills,
+                        skill_analysis: data.skill_analysis,
+                        score: data.score || '',
+                        target_domains: data.target_domains || []
+                    }))
+                    setIsLoading(false)
+                }
+                else {
+                    console.error("Unable to fetch data")
+                }
+            } catch (error) {
+                alert("error in fetching the user details")
+                console.log('userdetails error : ', {msg : error.message, error})
             }
         }
         userDetails()
     }, [])
 
-    useEffect(()=>{
+    useEffect(() => {
         console.log("✨user : ", user);
         // console.log("skill_analysis")
         // console.log(user.skill_analysis)
@@ -438,9 +445,9 @@ const Dashboard = () => {
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
 
                     {activeTab === 'overview' && !isLoading ? (
-                        <Overview 
-                            user={user} 
-                            isEditing={isEditing} 
+                        <Overview
+                            user={user}
+                            isEditing={isEditing}
                             setIsEditing={setIsEditing}
                             editedUser={editedUser}
                             setEditedUser={setEditedUser}
@@ -450,14 +457,14 @@ const Dashboard = () => {
                     ) : null}
 
 
-                    {activeTab === 'interviews' && !isLoading && <DashInterviews target_domains={user.target_domains}/>}
+                    {activeTab === 'interviews' && !isLoading && <DashInterviews target_domains={user.target_domains} />}
 
                     {activeTab === 'progress' && (
-                        <LearningDashboard/>
+                        <LearningDashboard />
                     )}
 
                     {activeTab === 'profile' && (
-                        <ProfileEditor/>
+                        <ProfileEditor />
                     )}
                 </main>
             </div >

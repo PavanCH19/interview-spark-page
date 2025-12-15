@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -10,6 +7,9 @@ import {
     ThumbsUp, ThumbsDown, Lightbulb, BookMarked, Briefcase, FolderOpen
 } from 'lucide-react';
 import { Notification } from '../components/Notifications';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import axios from 'axios';
+
 
 // Circular Progress Component
 const CircularProgress = ({ percentage, size = 200, label = "Overall Match" }) => {
@@ -258,18 +258,18 @@ const FeatureSummary = ({ features }) => {
 const AlternativeDomains = ({ suggestions, setSelectedAltDom, selectedAltDom }) => {
 
     const [selectedSuggestion, setSelectedSugggestion] = useState(false);
-    const onSelectDomain=(domain) => {
+    const onSelectDomain = (domain) => {
         setSelectedAltDom(domain.domain)
         setSelectedSugggestion(true);
     }
-    
+
 
     const getRankColor = (rank) => {
         if (rank === 1) return 'from-yellow-400 to-orange-500';
         if (rank === 2) return 'from-blue-400 to-indigo-500';
         return 'from-purple-400 to-pink-500';
     };
-    
+
 
 
     const getRankBadge = (rank) => {
@@ -277,7 +277,7 @@ const AlternativeDomains = ({ suggestions, setSelectedAltDom, selectedAltDom }) 
         if (rank === 2) return '🥈';
         return '🥉';
     };
-    
+
 
     return (
         <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 border border-white/50">
@@ -290,7 +290,7 @@ const AlternativeDomains = ({ suggestions, setSelectedAltDom, selectedAltDom }) 
                 {suggestions.map((suggestion, idx) => (
                     <div
                         key={idx}
-                        className={`group ${(selectedAltDom === suggestion.domain)? "border-purple-400 border-3":''} bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border-2 border-gray-200  transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer`}
+                        className={`group ${(selectedAltDom === suggestion.domain) ? "border-purple-400 border-3" : ''} bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border-2 border-gray-200  transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer`}
                     >
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-2">
@@ -340,8 +340,8 @@ const AlternativeDomains = ({ suggestions, setSelectedAltDom, selectedAltDom }) 
                             onClick={() => onSelectDomain(suggestion)}
                             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
                         >
-                            View Path
-                            <ArrowRight className="w-4 h-4" />
+                            Select this path
+                            {/* <ArrowRight className="w-4 h-4" /> */}
                         </button>
                     </div>
                 ))}
@@ -476,35 +476,67 @@ const DecisionModal = ({ show, onClose, children }) => {
 
 import { useNavigate } from 'react-router-dom';
 
-const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) => {
+const CareerDecision = ({ selectedDomain, setNotification, setIsNotification }) => {
     const [showModal, setShowModal] = useState(false);
     const [domainSelected, setDomainSelected] = useState(false);
     const navigate = useNavigate();
-    const onSwitchPath = (domain)=>{
+    const onSwitchPath = async (domain) => {
         console.log(" 🤣domain", domain)
-        if(domainSelected){
-            navigate('/dashboard')
+        if (domainSelected) {
+            try {
+                const response = await axios.put(`${API_BASE_URL}/setup/add-target-domain`, { domain: selectedDomain },
+                    {
+                        headers: {
+                            'Authorization': `${localStorage.getItem('token')}`,
+                            'Content-Type': 'application/json',
+                        }
+                    }
+                )
+                if (response.status === 200) {
+                    console.log("Response recieved : ", response.data)
+                    setNotification({
+                        message : "Successfully updated Domains",
+                        type : 'success'
+                    })
+                    setIsNotification(true);
+                    setTimeout(()=>{
+                        navigate('/dashboard')
+                    })
+                }
+                else {
+                    setNotification({
+                        message : "Unable update the domains",
+                        type : 'error'
+                    })
+                    setIsNotification(true);
+                }
+            } catch (error) {
+                console.error("Some error occured")
+                console.log(error.message)
+                console.log(error)
+            }
         }
     }
-    useEffect(()=>{
-        if(selectedDomain !==''){
+
+    useEffect(() => {
+        if (selectedDomain !== '') {
             setDomainSelected(true);
         }
-        else{
+        else {
             setDomainSelected(false)
         }
         console.log("👋", domainSelected)
-    },[domainSelected, selectedDomain])
+    }, [domainSelected, selectedDomain])
 
-    const handleSwitchPath = ()=>{
-            setShowModal(true)
-            if(!domainSelected){
-                setNotification({
-                    message : 'Domain Not Selected',
-                    type : 'warning'
-                })
-                setIsNotification(true);
-            }            
+    const handleSwitchPath = () => {
+        setShowModal(true)
+        if (!domainSelected) {
+            setNotification({
+                message: 'Domain Not Selected',
+                type: 'warning'
+            })
+            setIsNotification(true);
+        }
     }
 
     // Modal helper component that renders to document.body so backdrop covers entire viewport
@@ -570,7 +602,7 @@ const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) =
                 <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
                     <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-                        {domainSelected? `Confirm Switch to ${selectedDomain}` : "Select the Domain"}
+                        {domainSelected ? `Confirm Switch to ${selectedDomain}` : "Select the Domain"}
                     </h3>
                     <p className="text-gray-600 mb-6 text-center">
                         Switching will update your profile and learning plan. Continue?
@@ -579,9 +611,9 @@ const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) =
                     <div className="flex gap-3">
                         <button
                             onClick={() => setShowModal(false)}
-                            className={`${!domainSelected? "curosr-not-allowed":"cursor-pointer"} flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100`}
+                            className={`${!domainSelected ? "curosr-not-allowed" : "cursor-pointer"} flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100`}
                         >
-                            {!domainSelected?"Select Domain" : "Cancel"}
+                            {!domainSelected ? "Select Domain" : "Cancel"}
                         </button>
                         <button
                             onClick={() => {
@@ -589,7 +621,7 @@ const CareerDecision = ({ selectedDomain, setNotification, setIsNotification}) =
                                 onSwitchPath(selectedDomain);
                             }}
                             disabled={!domainSelected}
-                            className={`flex-1 ${domainSelected? "hover:cursor-pointer" : "hover:cursor-not-allowed"} px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:shadow-xl`}
+                            className={`flex-1 ${domainSelected ? "hover:cursor-pointer" : "hover:cursor-not-allowed"} px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:shadow-xl`}
                         >
                             Confirm Switch
                         </button>
@@ -906,13 +938,13 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
     const [selectedAltDom, setSelectedAltDom] = useState("");
     const [isNotification, setIsNotification] = useState(false);
     const [notification, setNotification] = useState({
-        message : '',
-        type : ''
+        message: '',
+        type: ''
     })
 
-    useEffect(()=>{
+    useEffect(() => {
         console.log("🤝", selectedAltDom);
-    },[selectedAltDom])
+    }, [selectedAltDom])
 
     const results = assessmentTestResults || [
         {
@@ -1001,14 +1033,14 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
                     summary={summary}
                 />
 
-            {isNotification && (
-                <Notification
-                message={notification.message}
-                type={notification.type}
-                duration={4000}
-                onClose={() => setNotification({ message: '', type: '' })}
-            />
-            )}
+                {isNotification && (
+                    <Notification
+                        message={notification.message}
+                        type={notification.type}
+                        duration={4000}
+                        onClose={() => setNotification({ message: '', type: '' })}
+                    />
+                )}
 
                 {/* Performance Metrics */}
                 <FeatureSummary features={assessmentData.feature_summary} />
@@ -1067,7 +1099,7 @@ const CareerRecommendationDashboard = ({ classificationResult, mocktest_result, 
 
                 {/* Career Decision */}
                 <CareerDecision selectedDomain={selectedAltDom} setNotification={setNotification}
-                    setIsNotification={setIsNotification}    
+                    setIsNotification={setIsNotification}
                 />
 
                 {/* Motivational Footer */}

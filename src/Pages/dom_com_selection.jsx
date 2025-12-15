@@ -611,7 +611,7 @@ const DomainCompanySelector = ({ onComplete, onDataSubmit }) => {
         { id: 10, name: 'Embedded Systems', icon: Server, color: 'from-blue-400 to-cyan-400', trend: false },
 
         { id: 11, name: 'AR VR Development', icon: Sparkles, color: 'from-fuchsia-400 to-pink-500', trend: true },
-        { id: 12, name: 'UI UX Design', icon: Check, color: 'from-teal-400 to-green-400', trend: true },
+        { id: 12, name: 'UI UX Development', icon: Check, color: 'from-teal-400 to-green-400', trend: true },
 
         // 🔥 LANGUAGE / FRAMEWORK DOMAINS
         { id: 13, name: 'Java Development', icon: Coffee, color: 'from-red-500 to-orange-500', trend: true },

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { User, BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Zap, ChevronRight, Play, RotateCcw, Download, Shield, Edit2, Save, X, CheckCircle, AlertCircle, Trophy, Flame, Star, Clock, MessageSquare, BarChart3, Brain, Menu, Home, LogOut, HelpCircle, GripVertical } from 'lucide-react';
+import { User,ClipboardList , BookOpen, TrendingUp, Award, Bell, Settings, Calendar, Target, Zap, ChevronRight, Play, RotateCcw, Download, Shield, Edit2, Save, X, CheckCircle, AlertCircle, Trophy, Flame, Star, Clock, MessageSquare, BarChart3, Brain, Menu, Home, LogOut, HelpCircle, GripVertical } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import DashInterviews from '../components/dashboard/dashInterviews';
@@ -8,6 +8,7 @@ import Overview from '../components/dashboard/overview';
 import Loading from '../components/loading'
 import LearningDashboard from '../components/gamification';
 import ProfileEditor from '../components/profile';
+import ResumeBuilderDashboard from './resume_build';
 
 // Zustand-like store using React hooks
 
@@ -179,7 +180,8 @@ const Dashboard = () => {
         { id: 'overview', label: 'Overview', icon: Home },
         { id: 'interviews', label: 'Interviews', icon: Play },
         { id: 'progress', label: 'Progress', icon: TrendingUp },
-        { id: 'profile', label: 'Profile', icon: User }
+        { id: 'profile', label: 'Profile', icon: User },
+        {id : 'resume', label : "Resume", icon :  ClipboardList }
     ];
 
     // Handle sidebar resizing
@@ -465,6 +467,10 @@ const Dashboard = () => {
 
                     {activeTab === 'profile' && (
                         <ProfileEditor />
+                    )}
+
+                    {activeTab === 'resume' && (
+                        <ResumeBuilderDashboard/>
                     )}
                 </main>
             </div >

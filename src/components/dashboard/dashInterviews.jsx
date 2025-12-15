@@ -51,7 +51,8 @@ const DashInterviews = ({ target_domains }) => {
     useEffect(() => {
         console.log("😂😍😍")
         console.log(sessions)
-    }, [sessions])
+        console.log(preparationPaths)
+    }, [sessions, preparationPaths])
 
     useEffect(() => {
         const getSessions = async () => {

@@ -711,6 +711,8 @@ const InterviewSessionUI = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const domain = location.state.domain;
+    const containerRef = useRef(null);
+    const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState({});
@@ -719,6 +721,58 @@ const InterviewSessionUI = () => {
     const [timeRemaining, setTimeRemaining] = useState('45:00');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasSubmitted, setHasSubmitted] = useState(false);
+    const [lockedDueToTabChange, setLockedDueToTabChange] = useState(false);
+    const [tabSwitchCount, setTabSwitchCount] = useState(0);
+    const [showLeaveModal, setShowLeaveModal] = useState(false);
+    const [leaveReason, setLeaveReason] = useState('');
+    const [leaveCountdown, setLeaveCountdown] = useState(5);
+
+    // Component-level violation handler so it can be invoked from multiple effects
+    const handleViolation = (reason) => {
+        if (hasSubmitted) return;
+        try { setTabSwitchCount(prev => prev + 1); } catch (e) {}
+        setLockedDueToTabChange(true);
+        setLeaveReason(reason);
+        setShowLeaveModal(true);
+    };
+
+    const confirmLeave = async () => {
+        try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
+        try { localStorage.setItem('interview_violation', '1'); } catch (e) {}
+        setShowLeaveModal(false);
+        navigate('/dashboard');
+    };
+
+    const cancelLeave = () => {
+        // kept for API parity but not used in UI (Stay button removed)
+        setShowLeaveModal(false);
+    };
+
+    // When the leave modal is shown, auto-countdown and redirect to dashboard
+    useEffect(() => {
+        if (!showLeaveModal) {
+            setLeaveCountdown(5);
+            return;
+        }
+
+        setLeaveCountdown(5);
+        // Try to exit fullscreen immediately for clarity
+        try { if (document.fullscreenElement) document.exitFullscreen?.(); } catch (e) {}
+
+        const interval = setInterval(() => {
+            setLeaveCountdown(prev => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    confirmLeave();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [showLeaveModal]);
 
     // Fetch Questions from API
     useEffect(() => {
@@ -781,6 +835,119 @@ const InterviewSessionUI = () => {
 
         return () => clearInterval(timer);
     }, []);
+
+    // Request fullscreen on mount and whenever this component is active.
+    useEffect(() => {
+        let mounted = true;
+
+        const onFullChange = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener('fullscreenchange', onFullChange);
+
+        
+
+        // Visibility / focus handlers to detect tab switching
+        const onVisibilityChange = () => {
+            if (document.hidden) {
+                handleViolation('tab switch');
+            }
+        };
+
+        const onBlur = () => {
+            handleViolation('lost focus');
+        };
+
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('blur', onBlur);
+
+        const ensureFullscreen = async () => {
+            if (!mounted) return;
+            const el = containerRef.current || document.documentElement;
+            try {
+                if (!document.fullscreenElement) {
+                    if (el.requestFullscreen) await el.requestFullscreen();
+                    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+                }
+            } catch (err) {
+                // Browsers often block programmatic fullscreen without user gesture.
+                // We silently catch and let the manual button handle it.
+                console.warn('Fullscreen request blocked or failed:', err);
+            }
+        };
+
+        // Try to enter fullscreen shortly after mount
+        const t = setTimeout(ensureFullscreen, 120);
+
+        return () => {
+            mounted = false;
+            clearTimeout(t);
+            document.removeEventListener('fullscreenchange', onFullChange);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('blur', onBlur);
+            // exit fullscreen if this component holds it
+            try {
+                if (document.fullscreenElement && (containerRef.current === document.fullscreenElement || document.fullscreenElement.contains(containerRef.current))) {
+                    document.exitFullscreen?.();
+                }
+            } catch (e) {
+                // ignore
+            }
+        };
+    }, []);
+
+    // Prevent page refresh (F5, Ctrl/Cmd+R, Ctrl+Shift+R) and warn on unload during active interview
+    useEffect(() => {
+        const onKeyDown = (e) => {
+            // F5
+            if (e.key === 'F5' || e.keyCode === 116) {
+                if (!hasSubmitted) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleViolation('refresh attempt (F5)');
+                }
+            }
+
+            // Ctrl/Cmd + R or Ctrl/Cmd + Shift + R
+            const isR = e.key && (e.key.toLowerCase() === 'r');
+            if (isR && (e.ctrlKey || e.metaKey)) {
+                if (!hasSubmitted) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try { localStorage.setItem('interview_violation', '1'); } catch (err) {}
+                    handleViolation('refresh attempt (Ctrl/Cmd+R)');
+                }
+            }
+        };
+
+        const onBeforeUnload = (e) => {
+            if (!hasSubmitted) {
+                const message = 'Refreshing or leaving will end the interview. Are you sure?';
+                e.preventDefault();
+                e.returnValue = message; // Gecko, Trident, Chrome 34+
+                return message; // Gecko, WebKit, Safari, Chrome <34
+            }
+            return undefined;
+        };
+
+        window.addEventListener('keydown', onKeyDown, { capture: true });
+        window.addEventListener('beforeunload', onBeforeUnload);
+
+        return () => {
+            window.removeEventListener('keydown', onKeyDown, { capture: true });
+            window.removeEventListener('beforeunload', onBeforeUnload);
+        };
+    }, [hasSubmitted]);
+
+    const enterFullscreen = async () => {
+        const el = containerRef.current || document.documentElement;
+        try {
+            if (el.requestFullscreen) await el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            else if (el.msRequestFullscreen) el.msRequestFullscreen();
+        } catch (err) {
+            console.warn('Manual fullscreen failed:', err);
+        }
+    };
 
     if (questions.length === 0) {
         return (
@@ -910,6 +1077,18 @@ const InterviewSessionUI = () => {
             );
 
             console.log("Submit success:", response.data);
+            // mark submitted so protections are lifted
+            setHasSubmitted(true);
+
+            // Exit fullscreen before navigating away
+            try {
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                }
+            } catch (e) {
+                console.warn('Exit fullscreen failed:', e);
+            }
+
             navigate('/interview-results', { state: response.data });
 
         } catch (err) {
@@ -936,13 +1115,19 @@ const InterviewSessionUI = () => {
     const isFirstQuestion = currentQuestionIndex === 0;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+        <div ref={containerRef} className="min-h-screen bg-gray-50 p-4 md:p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-800 mb-1">Interview Session</h1>
                     <p className="text-gray-600 text-sm">Complete all questions and submit when ready</p>
                 </div>
+
+                {lockedDueToTabChange && (
+                    <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                        <strong>Tab switch detected:</strong> You left the interview tab. Navigation is disabled for integrity. Please return to this tab and submit your answers. Attempts: {tabSwitchCount}
+                    </div>
+                )}
 
                 {/* Main Layout */}
                 <div className="grid lg:grid-cols-4 gap-6">
@@ -963,8 +1148,8 @@ const InterviewSessionUI = () => {
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleHint}
-                                        disabled={hintsUsed[currentQuestion._id]}
-                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all text-sm ${hintsUsed[currentQuestion._id]
+                                        disabled={hintsUsed[currentQuestion._id] || lockedDueToTabChange}
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all text-sm ${hintsUsed[currentQuestion._id] || lockedDueToTabChange
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             : 'bg-amber-500 text-white hover:bg-amber-600 shadow-sm hover:shadow'
                                             }`}
@@ -975,7 +1160,8 @@ const InterviewSessionUI = () => {
 
                                     <button
                                         onClick={handleRepeat}
-                                        className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all text-sm shadow-sm hover:shadow"
+                                        disabled={lockedDueToTabChange}
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all text-sm ${lockedDueToTabChange ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 shadow-sm hover:shadow'}`}
                                     >
                                         <RotateCcw size={18} />
                                         Clear
@@ -985,8 +1171,8 @@ const InterviewSessionUI = () => {
                                 <div className="flex gap-3 ml-auto">
                                     <button
                                         onClick={handlePrevious}
-                                        disabled={isFirstQuestion}
-                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all text-sm ${isFirstQuestion
+                                        disabled={isFirstQuestion || lockedDueToTabChange}
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all text-sm ${(isFirstQuestion || lockedDueToTabChange)
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm hover:shadow'
                                             }`}
@@ -998,7 +1184,8 @@ const InterviewSessionUI = () => {
                                     {!isLastQuestion ? (
                                         <button
                                             onClick={handleNext}
-                                            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all shadow-sm hover:shadow text-sm"
+                                            disabled={lockedDueToTabChange}
+                                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm ${lockedDueToTabChange ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow'}`}
                                         >
                                             Next
                                             <ChevronRight size={18} />
@@ -1006,7 +1193,8 @@ const InterviewSessionUI = () => {
                                     ) : (
                                         <button
                                             onClick={handleSubmit}
-                                            className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-all shadow-sm hover:shadow text-sm"
+                                            disabled={isSubmitting}
+                                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm ${isSubmitting ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow'}`}
                                         >
                                             <Send size={18} />
                                             Submit
@@ -1030,6 +1218,18 @@ const InterviewSessionUI = () => {
                 </div>
             </div>
 
+            {/* Fullscreen hint / manual button (shown when automatic request was blocked) */}
+            {!isFullscreen && (
+                <div className="fixed bottom-4 right-4 z-50">
+                    <button
+                        onClick={enterFullscreen}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700"
+                    >
+                        Enter Fullscreen
+                    </button>
+                </div>
+            )}
+
             {/* Success Modal */}
             {showSuccessModal && (
                 <SuccessModal
@@ -1039,6 +1239,19 @@ const InterviewSessionUI = () => {
                         answeredCount: Object.keys(answers).length
                     }}
                 />
+            )}
+
+            {showLeaveModal && (
+                <div className="fixed inset-0 bg-red-900/90 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white/95 rounded-2xl p-8 max-w-3xl w-full shadow-2xl border-4 border-red-600 text-center">
+                        <h1 className="text-4xl font-extrabold text-red-700 mb-4">Integrity Violation Detected</h1>
+                        <p className="text-lg text-gray-800 mb-6">You attempted to leave the interview: <span className="font-semibold">{leaveReason}</span></p>
+                        <p className="text-xl text-gray-900 mb-6">This action ends the interview. You will be redirected to the dashboard in <span className="font-bold text-red-600">{leaveCountdown}</span> second{leaveCountdown !== 1 ? 's' : ''}.</p>
+                        <div className="mt-2">
+                            <button onClick={confirmLeave} className="px-6 py-3 bg-red-700 text-white rounded-xl font-bold text-lg">Proceed Now</button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {isSubmitting && (

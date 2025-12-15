@@ -65,6 +65,7 @@ export default function ResumeBuilderDashboard() {
     const [splitRatio, setSplitRatio] = useState(50);
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef(null);
+    const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
     // Auto-save to in-memory state
     useEffect(() => {
@@ -260,7 +261,103 @@ export default function ResumeBuilderDashboard() {
     };
 
     const handleExportPDF = () => {
-        window.print();
+        // Print the current page using an injected print stylesheet (no new window)
+        const element = document.getElementById('resume-export');
+        if (!element) return alert('Resume content not found');
+
+        // Create a temporary style element for print rules (A4 + narrow margins)
+        const printStyle = document.createElement('style');
+        printStyle.setAttribute('data-temp-print-style', 'true');
+        printStyle.innerHTML = `
+            @media print {
+                @page { size: A4; margin: 5mm; }
+                html, body { height: auto !important; }
+                body * { visibility: hidden; }
+                #resume-export, #resume-export * { visibility: visible; }
+                #resume-export { position: relative; left: 0; top: 0; margin: 0; width: 210mm; box-sizing: border-box; padding: 5mm; }
+            }
+            `;
+
+        document.head.appendChild(printStyle);
+
+        // Give browser a tick to apply styles, then open print dialog
+        setTimeout(() => {
+            window.print();
+
+            // remove the temporary print style shortly after print (allow user to cancel)
+            setTimeout(() => {
+                const s = document.querySelector('style[data-temp-print-style]');
+                if (s) s.remove();
+            }, 1000);
+        }, 50);
+    };
+
+    const handleExportDoc = () => {
+        const element = document.getElementById('resume-export');
+        if (!element) return alert('Resume content not found');
+
+        const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+            .map(node => node.outerHTML)
+            .join('\n');
+
+        // Inline minimal print rules for doc export to encourage A4 + narrow margins
+        const docStyles = `<style>@page{size:A4;margin:5mm;}body{margin:0;-webkit-print-color-adjust:exact;} .resume-print-container{width:210mm;box-sizing:border-box;padding:5mm;}</style>`;
+
+        const html = `<!doctype html><html><head><meta charset="utf-8" />${styles}${docStyles}</head><body><div class="resume-print-container">${element.outerHTML}</div></body></html>`;
+        const blob = new Blob([html], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `resume_${new Date().toISOString().slice(0,10)}.doc`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    // Dynamically load a script and return a promise when loaded
+    const loadScript = (src) => new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) return resolve();
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('Failed to load script: ' + src));
+        document.head.appendChild(s);
+    });
+
+    const handleDownloadPDF = async () => {
+        const element = document.getElementById('resume-export');
+        if (!element) return alert('Resume content not found');
+
+        try {
+            // load html2pdf bundle from CDN
+            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js');
+
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const opt = {
+                margin:       5, // narrow margin in mm
+                filename:     `resume_A4_${timestamp}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // clone element and wrap with explicit A4 container and narrow padding
+            const clone = element.cloneNode(true);
+            const wrapper = document.createElement('div');
+            wrapper.style.boxSizing = 'border-box';
+            wrapper.style.width = '210mm';
+            wrapper.style.padding = '5mm';
+            wrapper.appendChild(clone);
+
+            // run html2pdf on the wrapper
+            window.html2pdf().set(opt).from(wrapper).save();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to generate PDF. Falling back to print preview.');
+            handleExportPDF();
+        }
     };
 
     const handleShare = () => {
@@ -449,13 +546,38 @@ export default function ResumeBuilderDashboard() {
                                             ))}
                                         </select>
 
-                                        <button
-                                            onClick={handleExportPDF}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                                        >
-                                            <Download className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Export</span>
-                                        </button>
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setExportMenuOpen(prev => !prev)}
+                                                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                                <span className="hidden sm:inline">Export</span>
+                                            </button>
+
+                                            {exportMenuOpen && (
+                                                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded shadow-lg z-50">
+                                                    <button
+                                                        className="w-full text-left px-4 py-2 hover:bg-slate-100"
+                                                        onClick={() => { setExportMenuOpen(false); handleDownloadPDF(); }}
+                                                    >
+                                                        Download PDF (A4)
+                                                    </button>
+                                                    <button
+                                                        className="w-full text-left px-4 py-2 hover:bg-slate-100"
+                                                        onClick={() => { setExportMenuOpen(false); handleExportPDF(); }}
+                                                    >
+                                                        Open Print Preview
+                                                    </button>
+                                                    <button
+                                                        className="w-full text-left px-4 py-2 hover:bg-slate-100"
+                                                        onClick={() => { setExportMenuOpen(false); handleExportDoc(); }}
+                                                    >
+                                                        Download .doc
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
 
                                         <button
                                             onClick={handleShare}
@@ -1101,6 +1223,7 @@ function ResumePreview() {
 
     return (
         <div
+            id="resume-export"
             className={`bg-white shadow-xl mx-auto max-w-4xl ${fontSizeMap[template.fontSize]} print:shadow-none`}
             style={{
                 fontFamily: template.fontFamily,

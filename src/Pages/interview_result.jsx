@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, AlertCircle, Clock, Award, TrendingUp, Mic, BarChart3, Brain, FileText, Home } from 'lucide-react';
 
@@ -43,6 +43,11 @@ const TestResultsDashboard = () => {
     return 'text-red-500';
   };
 
+  useEffect(()=>{
+    console.log('this is the data from /interview |interview_results.jsx')
+    console.log(data)
+  },[])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -50,7 +55,7 @@ const TestResultsDashboard = () => {
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-2">AI/ML Test Results</h1>
+              <h1 className="text-4xl font-bold text-gray-800 mb-2">Test Results</h1>
               <p className="text-gray-600">Domain: {data.domain.toUpperCase()}</p>
             </div>
             <div className="text-right flex flex-col items-end gap-2">
@@ -148,7 +153,7 @@ const TestResultsDashboard = () => {
               {(result.question_type === 'coding' || result.question_type === 'subjective') && (
                 <div>
                   <p className="text-gray-700 text-sm mb-3">
-                    {result.evaluation.result?.question_text || 'No question text available'}
+                    {result.evaluation.question_text || 'No question text available'}
                   </p>
                   <div className="flex gap-2 flex-wrap">
                     <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">
@@ -218,7 +223,7 @@ const TestResultsDashboard = () => {
                   <div className="space-y-6">
                     <div>
                       <h3 className="font-semibold text-gray-800 mb-2">Question</h3>
-                      <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{selectedQuestion.evaluation.result.question_text}</p>
+                      <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{selectedQuestion.evaluation.question_text}</p>
                     </div>
 
                     <div>
@@ -226,18 +231,18 @@ const TestResultsDashboard = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <p className="text-sm text-gray-600">Grade</p>
-                          <p className="text-3xl font-bold text-blue-600">{selectedQuestion.evaluation.result.grade}</p>
+                          <p className="text-3xl font-bold text-blue-600">{selectedQuestion.evaluation.grade}</p>
                         </div>
                         <div className="bg-purple-50 p-4 rounded-lg">
                           <p className="text-sm text-gray-600">Score</p>
-                          <p className="text-3xl font-bold text-purple-600">{selectedQuestion.evaluation.result.score}%</p>
+                          <p className="text-3xl font-bold text-purple-600">{selectedQuestion.evaluation.score}%</p>
                         </div>
                       </div>
                     </div>
 
                     <div>
                       <h3 className="font-semibold text-gray-800 mb-3">Criteria Performance</h3>
-                      {selectedQuestion.evaluation.result.criteria_performance.map((criteria, idx) => (
+                      {selectedQuestion.evaluation.criteria_performance.map((criteria, idx) => (
                         <div key={idx} className="mb-3">
                           <div className="flex justify-between mb-1">
                             <span className="text-sm font-medium text-gray-700">{criteria.criterion}</span>
@@ -253,10 +258,10 @@ const TestResultsDashboard = () => {
                     <div>
                       <h3 className="font-semibold text-gray-800 mb-3">Feedback</h3>
                       <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                        <p className="text-gray-800">{selectedQuestion.evaluation.result.detailed_feedback.overall_assessment}</p>
+                        <p className="text-gray-800">{selectedQuestion.evaluation.detailed_feedback.overall_assessment}</p>
                       </div>
 
-                      {selectedQuestion.evaluation.result.detailed_feedback.strengths.length > 0 && (
+                      {selectedQuestion.evaluation.detailed_feedback.strengths.length > 0 && (
                         <div className="mb-4">
                           <h4 className="font-medium text-green-700 mb-2">Strengths</h4>
                           {selectedQuestion.evaluation.result.detailed_feedback.strengths.map((s, i) => (
@@ -267,7 +272,7 @@ const TestResultsDashboard = () => {
 
                       <div>
                         <h4 className="font-medium text-red-700 mb-2">Missing Key Concepts</h4>
-                        {selectedQuestion.evaluation.result.detailed_feedback.areas_for_improvement[0].details.map((detail, i) => (
+                        {selectedQuestion.evaluation.detailed_feedback.areas_for_improvement[0].details.map((detail, i) => (
                           <div key={i} className="bg-red-50 p-3 rounded-lg mb-2">
                             <p className="font-medium text-red-800 text-sm">{detail.point}</p>
                             <p className="text-red-600 text-xs mt-1">{detail.suggestion}</p>

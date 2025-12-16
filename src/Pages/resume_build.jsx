@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
+import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FileText, Download, Share2, Eye, EyeOff, Plus, Trash2,
@@ -395,6 +396,81 @@ export default function ResumeBuilderDashboard() {
         hiddenSections,
         toggleSection,
     };
+
+    // Fetch user details and autofill resume on mount
+    useEffect(() => {
+        const fetchAndPopulate = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.get('http://localhost:3000/api/auth/getUserDetails', {
+                    headers: { Authorization: token ? `Bearer ${token}` : '' }
+                });
+
+                if (res?.status === 200) {
+                    const d = res.data?.data || {};
+
+                    setResumeData(prev => {
+                        // map skills to skill objects used by form
+                        const skills = (d.skills || []).map((s, i) => ({ id: `skill-${i}-${Date.now()}`, name: s, level: 3, keywords: [] }));
+
+                        // map experience
+                        const workExperience = (d.experience || []).map((e, i) => ({
+                            id: e.id?.toString() || `exp-${i}-${Date.now()}`,
+                            role: e.role || '',
+                            company: e.company || '',
+                            location: e.location || '',
+                            startDate: e.startDate || '',
+                            endDate: e.endDate || '',
+                            current: !!e.current,
+                            responsibilities: e.responsibilities && e.responsibilities.length ? e.responsibilities : ['']
+                        }));
+
+                        // map education
+                        const education = (d.education || []).map((edu, i) => ({
+                            id: edu.id?.toString() || `edu-${i}-${Date.now()}`,
+                            degree: edu.degree || '',
+                            institution: edu.college || edu.institution || '',
+                            location: edu.location || '',
+                            startDate: edu.startYear ? `${edu.startYear}-01` : (edu.startDate || ''),
+                            endDate: edu.endYear ? `${edu.endYear}-01` : (edu.endDate || ''),
+                            notes: ''
+                        }));
+
+                        // map projects
+                        const projects = (d.projects || []).map((p, i) => ({
+                            id: p.id?.toString() || `proj-${i}-${Date.now()}`,
+                            title: p.title || '',
+                            description: p.description || '',
+                            techStack: p.technologies || p.techStack || [],
+                            url: p.link || p.url || '',
+                            role: p.role || ''
+                        }));
+
+                        return {
+                            ...prev,
+                            personalInfo: {
+                                ...prev.personalInfo,
+                                fullName: d.profile?.name || prev.personalInfo.fullName,
+                                email: d.profile?.email || prev.personalInfo.email,
+                                phone: d.profile?.phone || prev.personalInfo.phone,
+                                location: d.profile?.location || prev.personalInfo.location,
+                                linkedin: d.profile?.linkedin || prev.personalInfo.linkedin,
+                                github: d.profile?.github || prev.personalInfo.github,
+                            },
+                            skills: skills.length ? skills : prev.skills,
+                            workExperience: workExperience.length ? workExperience : prev.workExperience,
+                            education: education.length ? education : prev.education,
+                            projects: projects.length ? projects : prev.projects,
+                        };
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch user details for resume autofill', error);
+            }
+        };
+
+        fetchAndPopulate();
+    }, []);
 
     return (
         <ResumeContext.Provider value={contextValue}>

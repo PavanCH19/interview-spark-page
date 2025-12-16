@@ -1076,7 +1076,8 @@ const InterviewSessionUI = () => {
                 }
             );
 
-            console.log("Submit success:", response.data);
+            console.log("Submit success: | interview.jsx");
+            console.log(response.data)
             // mark submitted so protections are lifted
             setHasSubmitted(true);
 

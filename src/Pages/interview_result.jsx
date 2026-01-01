@@ -43,10 +43,10 @@ const TestResultsDashboard = () => {
     return 'text-red-500';
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     console.log('this is the data from /interview |interview_results.jsx')
     console.log(data)
-  },[])
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
@@ -272,12 +272,29 @@ const TestResultsDashboard = () => {
 
                       <div>
                         <h4 className="font-medium text-red-700 mb-2">Missing Key Concepts</h4>
-                        {selectedQuestion.evaluation.detailed_feedback.areas_for_improvement[0].details.map((detail, i) => (
+                        {/* {selectedQuestion.evaluation.detailed_feedback.areas_for_improvement[0].details && selectedQuestion.evaluation.detailed_feedback.areas_for_improvement[0].details.map((detail, i) => (
                           <div key={i} className="bg-red-50 p-3 rounded-lg mb-2">
                             <p className="font-medium text-red-800 text-sm">{detail.point}</p>
                             <p className="text-red-600 text-xs mt-1">{detail.suggestion}</p>
                           </div>
-                        ))}
+                        ))} */}
+
+                        {selectedQuestion.evaluation?.detailed_feedback?.areas_for_improvement?.length > 0 &&
+                          selectedQuestion.evaluation.detailed_feedback.areas_for_improvement[0]?.details?.length > 0 ? (
+
+                          selectedQuestion.evaluation.detailed_feedback.areas_for_improvement[0].details.map((detail, i) => (
+                            <div key={i} className="bg-red-50 p-3 rounded-lg mb-2">
+                              <p className="font-medium text-red-800 text-sm">{detail.point}</p>
+                              <p className="text-red-600 text-xs mt-1">{detail.suggestion}</p>
+                            </div>
+                          ))
+
+                        ) : (
+                          <p className="text-sm text-gray-500 italic">
+                            No missing key concepts identified.
+                          </p>
+                        )}
+
                       </div>
                     </div>
                   </div>

@@ -78,7 +78,7 @@ const Waveform = ({ stream, isRecording }) => {
 //onRecordingComplete is handleAnswerChange | changes the form data object
 const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
     const [status, setStatus] = useState(answer ? 'stopped' : 'ready'); // ready, recording, stopped
-    const [audioURL, setAudioURL] = useState(answer || null);
+    const [audioURL, setAudioURL] = useState(null);
     const [recordingTime, setRecordingTime] = useState(0);
     const [error, setError] = useState('');
 
@@ -267,6 +267,19 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
         }
     };
 
+    // Handle initial answer if it's a File
+    useEffect(() => {
+        if (answer instanceof File && !audioURL) {
+            const url = URL.createObjectURL(answer);
+            setAudioURL(url);
+            wavFileRef.current = answer;
+            setStatus('stopped');
+        } else if (typeof answer === 'string' && answer.startsWith('blob:') && !audioURL) {
+            setAudioURL(answer);
+            setStatus('stopped');
+        }
+    }, [answer, audioURL]);
+
     // Cleanup
     useEffect(() => {
         return () => {
@@ -276,7 +289,7 @@ const VoiceRecorder = ({ onRecordingComplete, answer, maxDuration = 300 }) => {
             if (streamRef.current) {
                 streamRef.current.getTracks().forEach(track => track.stop());
             }
-            if (audioURL && !answer) {
+            if (audioURL && typeof audioURL === 'string' && audioURL.startsWith('blob:') && !answer) {
                 URL.revokeObjectURL(audioURL);
             }
         };
@@ -495,7 +508,8 @@ const AnswerInput = ({ question, answer, onChange }) => {
     }
 
     if (question.question_type === 'voice-based' || question.question_type === 'voice') {
-        return <VoiceRecorder answer={answer} onRecordingComplete={onChange} />; // here onChange stands for HandleAnswerChange
+        const questionId = question._id || question.qid || 'voice-recorder';
+        return <VoiceRecorder key={questionId} answer={answer} onRecordingComplete={onChange} />; // here onChange stands for HandleAnswerChange
     }
 
     return (
@@ -731,15 +745,15 @@ const InterviewSessionUI = () => {
     // Component-level violation handler so it can be invoked from multiple effects
     const handleViolation = (reason) => {
         if (hasSubmitted) return;
-        try { setTabSwitchCount(prev => prev + 1); } catch (e) {}
+        try { setTabSwitchCount(prev => prev + 1); } catch (e) { }
         setLockedDueToTabChange(true);
         setLeaveReason(reason);
         setShowLeaveModal(true);
     };
 
     const confirmLeave = async () => {
-        try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) {}
-        try { localStorage.setItem('interview_violation', '1'); } catch (e) {}
+        try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (e) { }
+        try { localStorage.setItem('interview_violation', '1'); } catch (e) { }
         setShowLeaveModal(false);
         navigate('/dashboard');
     };
@@ -758,7 +772,7 @@ const InterviewSessionUI = () => {
 
         setLeaveCountdown(5);
         // Try to exit fullscreen immediately for clarity
-        try { if (document.fullscreenElement) document.exitFullscreen?.(); } catch (e) {}
+        try { if (document.fullscreenElement) document.exitFullscreen?.(); } catch (e) { }
 
         const interval = setInterval(() => {
             setLeaveCountdown(prev => {
@@ -843,7 +857,7 @@ const InterviewSessionUI = () => {
         const onFullChange = () => setIsFullscreen(!!document.fullscreenElement);
         document.addEventListener('fullscreenchange', onFullChange);
 
-        
+
 
         // Visibility / focus handlers to detect tab switching
         const onVisibilityChange = () => {
@@ -913,7 +927,7 @@ const InterviewSessionUI = () => {
                 if (!hasSubmitted) {
                     e.preventDefault();
                     e.stopPropagation();
-                    try { localStorage.setItem('interview_violation', '1'); } catch (err) {}
+                    try { localStorage.setItem('interview_violation', '1'); } catch (err) { }
                     handleViolation('refresh attempt (Ctrl/Cmd+R)');
                 }
             }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Clock, Brain, Target, ChevronRight, Lightbulb, RotateCcw, CheckCircle, XCircle, ChevronLeft, Mic, Square, Send } from 'lucide-react';
-import { Download, AlertCircle } from 'lucide-react';
+import { Clock, Brain, Target, ChevronRight, Lightbulb, RotateCcw, CheckCircle, XCircle, ChevronLeft, Mic, Square, Send, Code, Terminal, FileCode, Info } from 'lucide-react';
+import { Download, AlertCircle, FileText } from 'lucide-react';
 import axios from 'axios';
 import RecentSession from '../components/sessions/recent_sessions';
 
@@ -488,19 +488,26 @@ const AnswerInput = ({ question, answer, onChange }) => {
     }
 
     if (question.question_type === 'coding') {
-        const starterCode = question.starter_code || '// Write your code here\n';
+        const codingInfo = question.coding_instructions || {};
+        const language = codingInfo.language || question.language || 'JavaScript';
+        const starterCode = codingInfo.starter_code || question.starter_code || (language.toLowerCase() === 'python' ? '# Write your solution here\n' : '// Write your solution here\n');
+        const filename = language.toLowerCase() === 'python' ? 'main.py' : 'solution.js';
 
         return (
-            <div className="border border-gray-300 rounded-xl overflow-hidden">
+            <div className="border border-gray-300 rounded-xl overflow-hidden shadow-sm">
                 <div className="bg-gray-800 px-4 py-2.5 flex items-center justify-between">
-                    <span className="text-sm text-gray-300 font-mono">solution.js</span>
-                    <span className="text-xs text-gray-400">JavaScript</span>
+                    <div className="flex items-center gap-2">
+                        <FileCode size={16} className="text-blue-400" />
+                        <span className="text-sm text-gray-300 font-mono">{filename}</span>
+                    </div>
+                    <span className="text-xs text-gray-400 font-semibold uppercase">{language}</span>
                 </div>
                 <textarea
                     value={answer || starterCode}
                     onChange={(e) => onChange(e.target.value)}
-                    className="w-full h-56 p-4 bg-gray-900 text-green-400 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-                    placeholder="// Write your code here..."
+                    className="w-full h-80 p-4 bg-gray-900 text-green-400 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none leading-relaxed"
+                    placeholder={`# Write your ${language} solution here...`}
+                    spellCheck="false"
                     aria-label="Code editor"
                 />
             </div>
@@ -509,7 +516,9 @@ const AnswerInput = ({ question, answer, onChange }) => {
 
     if (question.question_type === 'voice-based' || question.question_type === 'voice') {
         const questionId = question._id || question.qid || 'voice-recorder';
-        return <VoiceRecorder key={questionId} answer={answer} onRecordingComplete={onChange} />; // here onChange stands for HandleAnswerChange
+        // Use dynamic max duration if available
+        const maxDuration = question.expected_ans?.maximum_duration_sec || 300;
+        return <VoiceRecorder key={questionId} answer={answer} onRecordingComplete={onChange} maxDuration={maxDuration} />;
     }
 
     return (
@@ -522,12 +531,28 @@ const AnswerInput = ({ question, answer, onChange }) => {
 // Question Card Component | onChange is handleAnswerChange
 const QuestionCard = ({ question, answer, onChange, showHint, currentIndex, totalQuestions }) => {
     const getDifficultyColor = (label) => {
-        switch (label) {
-            case 'Easy': return 'bg-green-100 text-green-700 border-green-200';
-            case 'Medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-            case 'Hard': return 'bg-red-100 text-red-700 border-red-200';
-            default: return 'bg-gray-100 text-gray-700 border-gray-200';
+        const l = label ? label.toLowerCase() : '';
+        if (l.includes('easy') || l.includes('novice')) return 'bg-green-100 text-green-700 border-green-200';
+        if (l.includes('medium') || l.includes('intermediate')) return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        if (l.includes('hard') || l.includes('expert') || l.includes('advanced')) return 'bg-red-100 text-red-700 border-red-200';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    };
+
+    const formatValue = (val, language = 'javascript') => {
+        const lang = language.toLowerCase();
+        if (val === null || val === undefined) return lang === 'python' ? 'None' : 'null';
+        if (typeof val === 'boolean') {
+            if (lang === 'python') return val ? 'True' : 'False';
+            return String(val);
         }
+        if (typeof val === 'object') {
+            try {
+                return JSON.stringify(val);
+            } catch (e) {
+                return String(val);
+            }
+        }
+        return String(val);
     };
 
     const questionTypeLabel = {
@@ -537,6 +562,9 @@ const QuestionCard = ({ question, answer, onChange, showHint, currentIndex, tota
         "voice-based": "Voice",
         "voice": "Voice"
     }[question.question_type] || "Question";
+
+    const codingInfo = question.coding_instructions || {};
+    const language = codingInfo.language || question.language || 'javascript';
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
@@ -561,13 +589,18 @@ const QuestionCard = ({ question, answer, onChange, showHint, currentIndex, tota
             </div>
 
             {/* Metadata */}
-            {(question.tags?.length > 0 || question.topic) && (
+            {(question.tags?.length > 0 || question.topic || question.required_skills?.length > 0) && (
                 <div className="flex items-center gap-2 flex-wrap text-xs">
                     {question.topic && (
                         <span className="px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg border border-purple-200">
                             {question.topic}
                         </span>
                     )}
+                    {question.required_skills?.map((skill, index) => (
+                        <span key={`skill-${index}`} className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg border border-blue-200">
+                            {skill}
+                        </span>
+                    ))}
                     {question.tags?.map((tag, index) => (
                         <span key={index} className="px-2.5 py-1 bg-gray-50 text-gray-600 rounded-lg border border-gray-200">
                             {tag}
@@ -578,6 +611,92 @@ const QuestionCard = ({ question, answer, onChange, showHint, currentIndex, tota
                             ⏱ {Math.ceil(question.estimated_time_sec / 60)} min
                         </span>
                     )}
+                </div>
+            )}
+
+            {/* Coding Instructions & Testcases */}
+            {question.question_type === 'coding' && (
+                <div className="space-y-4 pt-2">
+                    <div className="grid md:grid-cols-2 gap-4">
+                        {/* Coding Instructions */}
+                        {question.coding_instructions && (
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 shadow-sm">
+                                <div className="flex items-center gap-2 mb-3 text-slate-800">
+                                    <Code size={18} className="text-blue-600" />
+                                    <h3 className="text-sm font-bold">Coding Instructions</h3>
+                                </div>
+                                <div className="space-y-3 text-xs">
+                                    {question.coding_instructions.language && (
+                                        <div className="flex justify-between items-center py-1 border-b border-slate-100">
+                                            <span className="text-gray-500">Language</span>
+                                            <span className="font-mono text-blue-600 bg-blue-50 px-2 rounded">{question.coding_instructions.language}</span>
+                                        </div>
+                                    )}
+                                    {question.coding_instructions.function_signature && (
+                                        <div className="py-1 border-b border-slate-100">
+                                            <span className="text-gray-500 block mb-1">Function Signature</span>
+                                            <code className="bg-slate-200 px-2 py-1 rounded block overflow-x-auto whitespace-nowrap">{question.coding_instructions.function_signature}</code>
+                                        </div>
+                                    )}
+                                    {question.coding_instructions.allowed_libraries?.length > 0 && (
+                                        <div className="py-1">
+                                            <span className="text-gray-500 block mb-1">Allowed Libraries</span>
+                                            <div className="flex flex-wrap gap-1.5 mt-1">
+                                                {question.coding_instructions.allowed_libraries.map((lib, i) => (
+                                                    <span key={i} className="px-2 py-0.5 bg-green-50 text-green-700 rounded border border-green-100">{lib}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Test Cases */}
+                        {question.testcases?.length > 0 && (
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 shadow-sm">
+                                <div className="flex items-center gap-2 mb-3 text-slate-800">
+                                    <Terminal size={18} className="text-purple-600" />
+                                    <h3 className="text-sm font-bold">Example Test Cases</h3>
+                                </div>
+                                <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                                    {question.testcases.map((tc, i) => (
+                                        <div key={i} className="text-[11px] bg-white p-2.5 rounded-lg border border-slate-200">
+                                            {tc.description && <div className="font-semibold text-gray-600 mb-1.5">{tc.description}</div>}
+                                            <div className="space-y-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-gray-400 uppercase text-[9px] font-bold">Input</span>
+                                                    <code className="font-mono bg-slate-50 p-1.5 rounded mt-0.5 break-all border border-slate-100">
+                                                        {formatValue(tc.input, language)}
+                                                    </code>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-gray-400 uppercase text-[9px] font-bold font-mono">Expected Output</span>
+                                                    <code className="font-mono bg-green-50 text-green-700 p-1.5 rounded mt-0.5 break-all border border-green-100 font-bold">
+                                                        {formatValue(tc.expected_output, language)}
+                                                    </code>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Voice Requirements */}
+            {question.question_type === 'voice' && question.expected_ans && (
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
+                    <Info className="text-blue-500 mt-0.5" size={18} />
+                    <div className="text-sm text-blue-800">
+                        <span className="font-bold block mb-1">Response Requirements:</span>
+                        <div className="flex gap-4">
+                            <span>⏱ Min: {question.expected_ans.minimum_duration_sec}s</span>
+                            <span>⏱ Max: {question.expected_ans.maximum_duration_sec}s</span>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -592,7 +711,7 @@ const QuestionCard = ({ question, answer, onChange, showHint, currentIndex, tota
 
             {/* Hint Section */}
             {showHint && question.hints && question.hints.length > 0 && (
-                <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-lg">
+                <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-lg animate-fade-in">
                     <div className="flex items-start gap-2">
                         <Lightbulb className="text-amber-600 mt-0.5 flex-shrink-0" size={18} />
                         <div>
@@ -732,7 +851,7 @@ const InterviewSessionUI = () => {
     const [answers, setAnswers] = useState({});
     const [showHint, setShowHint] = useState(false);
     const [hintsUsed, setHintsUsed] = useState({});
-    const [timeRemaining, setTimeRemaining] = useState('45:00');
+    const [timeRemaining, setTimeRemaining] = useState('30:00');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [hasSubmitted, setHasSubmitted] = useState(false);

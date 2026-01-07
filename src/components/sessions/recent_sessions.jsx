@@ -50,7 +50,7 @@ const RecentSession = ({ isOpen, setIsOpen, session }) => {
         mcq_attempted: 0,
         voice_attempted: 0,
         coding_attempted: 0,
-        overall_average: session?.score > 10 ? Math.round(session?.score) : Math.round((session?.score || 0) * 10),
+        overall_average: session?.score || 0,
       },
       skill_analysis: skillAnalysis,
       top_skills: session?.skill_analysis?.stronger_skills || [],
@@ -118,7 +118,7 @@ const RecentSession = ({ isOpen, setIsOpen, session }) => {
               <div className="flex items-center justify-between mb-2">
                 <BarChart3 className="w-5 h-5 text-indigo-500" />
                 <span className={`text-2xl font-bold ${getScoreColor(data.session_stats.overall_average)}`}>
-                  {data.session_stats.overall_average/5 * 100}%
+                  {data.session_stats.overall_average.toFixed(1)}%
                 </span>
               </div>
               <p className="text-xs text-gray-600">Overall Score</p>
